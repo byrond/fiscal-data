@@ -19,6 +19,7 @@ import TOCData from './toc-data.json';
 import BreadCrumbs from "../../components/breadcrumbs/breadcrumbs";
 import SecondaryNav from "../../components/secondary-nav/secondary-nav";
 import Experimental from "../../components/experimental/experimental";
+import { evaluate } from '@mdx-js/mdx';
 
 import { tocHeader } from '../../components/table-of-contents/toc.module.scss';
 import {
@@ -50,7 +51,7 @@ const AboutUsPage: FunctionComponent = ({data}) => {
 
   const [highlight, doHighlight] = useState(0);
   const [mdxAST, setMdxAST] = useState([]); // todo - Uncomment for toc cms
-
+  const [mdxLoad, setMdxLoad] = useState('');
   const tocHeaderComponent = (
     <h2 data-test-id="about-page-header" className={tocHeader}>
       Table of Contents
@@ -76,6 +77,13 @@ const AboutUsPage: FunctionComponent = ({data}) => {
 
       setMdxAST(curAST);
     }
+    fetch('/cms/about-section.mdx').then(result => result.text()).then(resultBody => {
+      console.log('resultBody', resultBody);
+      setMdxLoad(resultBody);
+      evaluate(resultBody).then(res => {
+        console.log(res);
+      });
+    });
   }, []);
 
 
@@ -129,7 +137,7 @@ const AboutUsPage: FunctionComponent = ({data}) => {
               className={content}
               data-test-id="about-content"
             >
-              <AboutMDX />
+              {/*<AboutMDX mdxBody={evaluate(mdxLoad)}/>*/}
               <FAQMDX triggerHighlight={highlight} />
               <ContactMDX onUnsupportedSubject={() => doHighlight(prevState => prevState + 1)} />
             </div>

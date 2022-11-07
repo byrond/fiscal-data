@@ -8,22 +8,16 @@ import FDGMdxProvider from "../../../components/mdx/FDGMdxProvider";
 import { MDXProvider } from "@mdx-js/react";
 import {aboutUsComponents} from "../helpers/helpers";
 
-const AboutUs = () => {
-  const aboutSection = useStaticQuery(graphql`
-    query {
-      mdx(frontmatter: {id: {eq: "about-section"}}) {
-        body
-      }
-    }
-  `);
+const AboutUs = ({mdxBody}) => {
+
 
   return (
     <>
-      {aboutSection && aboutSection.mdx && aboutSection.mdx.body &&
+      {mdxBody &&
         <section className={styles.section}>
           <FDGMdxProvider>
             <MDXProvider components={aboutUsComponents}>
-              <MDXRenderer children={aboutSection.mdx.body}/>
+              <MDXRenderer children={mdxBody}/>
             </MDXProvider>
           </FDGMdxProvider>
         </section>
