@@ -645,6 +645,14 @@ exports.onCreateWebpackConfig = ({ stage, actions, plugins, getConfig }) => {
         process: 'process/browser',
         Buffer: ['buffer', 'Buffer']
       })],
+      resolve:{
+        fallback: {
+          assert: false
+        }
+      },
+      node: {
+        fs: 'empty'
+      }
     });
   }
 };

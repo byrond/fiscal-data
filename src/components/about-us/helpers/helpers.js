@@ -3,12 +3,14 @@ import React from "react";
 import * as sectionStyles
   from "../../api-documentation/section-content/section-content.module.scss";
 import * as styles from "../../../pages/about-us/about-us.module.scss";
+import CustomLink from "../../links/custom-link/custom-link";
 
 
 export const aboutUsComponents = {
   section: ({children, sectionTitle, noList,  ...props}) => <section
     className={`${sectionTitle ? styles.title : sectionStyles.sectionContainer} ${noList === true ? '' : styles.list}`}
-    {...props}>{children}</section>
+    {...props}>{children}</section>,
+  a: CustomLink
 };
 
 export const additionalContactsComponents = {

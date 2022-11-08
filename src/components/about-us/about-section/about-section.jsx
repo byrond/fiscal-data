@@ -7,20 +7,19 @@ import {MDXRenderer} from "gatsby-plugin-mdx";
 import FDGMdxProvider from "../../../components/mdx/FDGMdxProvider";
 import { MDXProvider } from "@mdx-js/react";
 import {aboutUsComponents} from "../helpers/helpers";
+import MDX from '@mdx-js/runtime';
+
 
 const AboutUs = ({mdxBody}) => {
-
 
   return (
     <>
       {mdxBody &&
-        <section className={styles.section}>
-          <FDGMdxProvider>
-            <MDXProvider components={aboutUsComponents}>
-              <MDXRenderer children={mdxBody}/>
-            </MDXProvider>
-          </FDGMdxProvider>
-        </section>
+      <section className={styles.section}>
+        <MDX components={aboutUsComponents}>
+          {mdxBody}
+        </MDX>
+      </section>
       }
     </>
   );
