@@ -139,8 +139,8 @@ const AboutUsPage: FunctionComponent = ({data}) => {
               data-test-id="about-content"
             >
               <AboutMDX mdxBody={mdxLoad} />
-              <FAQMDX triggerHighlight={highlight} />
-              <ContactMDX onUnsupportedSubject={() => doHighlight(prevState => prevState + 1)} />
+              {/*<FAQMDX triggerHighlight={highlight} />*/}
+              {/*<ContactMDX onUnsupportedSubject={() => doHighlight(prevState => prevState + 1)} />*/}
             </div>
           </SecondaryNav>
         </Experimental>
