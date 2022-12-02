@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import ExplainerPageLayout from './explainer';
 import explainerSections from './sections/sections';
 import {
-  mockExplainerPageResponse, mockSpendingHeroData,
+  mockExplainerPageResponse, mockSpendingHeroData, mockUseStaticBeaGDP
 } from './explainer-test-helper';
 import {
   determineBEAFetchResponse,
@@ -17,6 +17,7 @@ import {
   circleChartMockChartData,
   governmentRevenueMatchers
 } from "./explainer-helpers/government-revenue/government-revenue-test-helper";
+import { useStaticQuery } from "gatsby";
 
 describe('Explainer Page Layout', () => {
   const pageName = 'national-debt';
@@ -38,6 +39,10 @@ describe('Explainer Page Layout', () => {
     heroImage,
     glossary
   }
+
+  beforeAll(() => {
+    useStaticQuery.mockReturnValue(mockUseStaticBeaGDP);
+  });
 
   beforeEach(() => {
     setGlobalFetchResponse(
@@ -161,19 +166,30 @@ describe('Spending explainer', () => {
     heading: 'mock heading',
     subHeading: 'mock subheading'
   }
+  const cpiDataByYear = {
+    "2015": "237.945",
+    "2016": "241.428",
+    "2017": "246.819",
+    "2018": "252.439",
+    "2019": "256.759",
+    "2020": "260.280",
+    "2021": "274.310",
+    "2022": "296.808",
+  };
   const glossary = [];
   const mockPageContext = {
     breadCrumbLinkName,
     seoConfig,
     heroImage,
-    glossary
+    glossary,
+    cpiDataByYear
   }
 
   it('renders the spending explainer page', async () => {
     const pageName = 'federal-spending';
     const spendingPageContext = {
       pageName,
-      ...mockPageContext
+      ...mockPageContext,
     }
 
     const { findAllByTestId, findByText } = render(

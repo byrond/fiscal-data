@@ -9,24 +9,26 @@ import {
 } from "../../../../../../variables.module.scss";
 import { pxToNumber } from "../../../../../../helpers/styles-helper/styles-helper";
 
-const name = "MTS - Summary of Receipts and Outlays of the U.S. Government";
+const name = "Monthly Treasury Statement (MTS)";
 const slug = `/datasets/monthly-treasury-statement/receipts-of-the-u-s-government/`;
+const beaLink = 'https://www.bea.gov/';
 const footer = (
   <p>
-    Visit the <CustomLink url={slug}>{name}</CustomLink> to explore and download
+    Visit the <CustomLink url={slug}>{name}</CustomLink> dataset to explore and download
     this data.
+    The GDP data is sourced from the <CustomLink url={beaLink}>Bureau of Economic Analysis</CustomLink>.
   </p>
 );
 
 
 
-export const getChartCopy = (minYear, maxYear) => {
+export const getChartCopy = (minYear, maxYear, selectedChartView) => {
   return {
   title: `Government Spending and the U.S. Economy (GDP), FY ${minYear} – ${maxYear}`,
   subtitle: `Inflation Adjusted - ${maxYear} Dollars`,
   footer: footer,
-  altText:
-    "Line graph comparing the total federal spending to the total GDP dollar amount.",
+  altText: (selectedChartView === "percentageGdp" ? "A line graph showing the percentage of GDP." :
+    "Line graph comparing the total federal spending to the total GDP dollar amount."),
   }
 };
 
@@ -277,7 +279,14 @@ export const lineChartCustomSlices = ( props, groupMouseLeave, mouseMove ) => {
           strokeOpacity={0.25}
           fillOpacity={0}
           onMouseEnter={() => props.setCurrentSlice(slice)}
-          onMouseMove={() => mouseMove(slice)}
+          onFocus={() =>{
+            mouseMove(slice)
+            props.setCurrentSlice(slice)}
+           }
+          onMouseMove={() =>{
+           mouseMove(slice)
+           props.setCurrentSlice(slice)}
+          }
           onMouseLeave={() => props.setCurrentSlice(null)}
         />
       ))}
@@ -288,7 +297,7 @@ export const lineChartCustomSlices = ( props, groupMouseLeave, mouseMove ) => {
 export const lineChartCustomPoints = props => {
   const { currentSlice, borderWidth, borderColor, points } = props;
 
-  
+
     const lastGdpPoints = points.filter(g => g.serieId == 'GDP').pop();
 
     const currentSpendingPoint = currentSlice?.points?.length
@@ -307,8 +316,8 @@ export const lineChartCustomPoints = props => {
           strokeWidth={borderWidth}
           stroke={borderColor}
           fillOpacity={0.35}
-          cx={currentSpendingPoint.x}
-          cy={currentSpendingPoint.y}
+          cx={currentSpendingPoint?.x}
+          cy={currentSpendingPoint?.y}
         />
         <circle
           r={2}
@@ -316,8 +325,8 @@ export const lineChartCustomPoints = props => {
           stroke={'#000000'}
           fill={'#000000'}
           fillOpacity={0.85}
-          cx={currentSpendingPoint.x}
-          cy={currentSpendingPoint.y}
+          cx={currentSpendingPoint?.x}
+          cy={currentSpendingPoint?.y}
         />
         {currentGdpPoint && (
           <>
@@ -343,5 +352,5 @@ export const lineChartCustomPoints = props => {
         )}
       </g>
     );
-  
+
 };
