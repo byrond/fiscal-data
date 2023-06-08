@@ -21,44 +21,38 @@ const MenuDropdown = (
     setActiveDropdown,
   }) => {
 
-  const [hideDropdown, setHideDropdown] = useState(false);
+  const [toggleDropdown, setToggleDropdown] = useState(false);
   const [isExpanded, setExpanded] = useState(false);
 
   const title = object.title;
 
-  useEffect(() => {
-    setHideDropdown(true);
-    // console.log("Title: " + title)
-    // console.log("Active dropdown: " + activeDropdown)
-
-    if (activeDropdown === title) {
-      setExpanded(true);
-    } else if (activeDropdown) {
-      // setExpanded(false);
-      // handleMouseLeave()
-    }
-
-    setTimeout(() => {
-      setHideDropdown(false)
-        }, 10)
-  }, [activeDropdown])
+  // useEffect(() => {
+  //   console.log(activeDropdown);
+  // }, [activeDropdown])
+  //
+  // useEffect(() => {
+  //   console.log(title, isExpanded);
+  // }, [isExpanded])
 
 
   const handleMouseLeave = () => {
-    console.log("mouse leave activited")
-
-    setHideDropdown(true);
-    if (activeDropdown && activeDropdown !== title) {
-      setExpanded(false)
-    }
+    setExpanded(false)
+    setToggleDropdown(true);
     setTimeout(() => {
-      setExpanded(false);
+      setToggleDropdown(false);
     }, 500)
-
-    if (activeDropdown === title) {
-      setActiveDropdown(null);
-    }
   }
+
+  const handleMouseEnter = () => {
+    setActiveDropdown(title);
+    handleMouseOver(title);
+    setToggleDropdown(true);
+    setExpanded(true);
+    setTimeout(() => {
+      setToggleDropdown(false)
+    }, 10)
+  }
+
 
   const clickHandler = (title) => {
     Analytics.event({
@@ -76,7 +70,6 @@ const MenuDropdown = (
       }
     });
   }
-
 
   const children = (object) => {
     if (object.children[0].children) {
@@ -134,27 +127,23 @@ const MenuDropdown = (
     <div
       className={dropdown}
       key={title}
+      onMouseLeave={handleMouseLeave}
+      onBlur={(e) => handleBlur(e)}
+      onMouseEnter={handleMouseEnter}
+      onFocus={handleMouseEnter}
+      role={'button'}
+      tabIndex={0}
     >
-      <button
+      <div
         className={`${isExpanded ? dropdownButtonExpanded : null} ${dropdownButton}`}
-        onMouseEnter={handleMouseOver}
-        onMouseLeave={() => handleMouseLeave()}
-        onFocus={handleMouseOver}
         style={{minWidth:`${(title.length * 7.5)+28}px`}}
       >
         {title}
-        <FontAwesomeIcon icon={activeDropdown === title ? faCaretDown : faCaretRight} className={caret} />
-
-      </button>
+        <FontAwesomeIcon icon={isExpanded ? faCaretDown : faCaretRight} className={caret} />
+      </div>
       {isExpanded && (
         <div
-          className={`${dropdownContent} ${hideDropdown ? dropdownHidden : ''}`}
-          onMouseOver={() => handleMouseOver(title)}
-          onMouseLeave={() => handleMouseLeave()}
-          onFocus={handleMouseOver}
-          onBlur={(e) => handleBlur(e)}
-          role={'button'}
-          tabIndex={'0'}
+          className={`${dropdownContent} ${toggleDropdown ? dropdownHidden : ''}`}
           data-testid={'dropdownContent'}
         >
           {children(object)}
