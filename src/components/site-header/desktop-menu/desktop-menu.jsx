@@ -37,7 +37,6 @@ const DesktopMenu = ({ location }) => {
         label: explainerPageName
       })
     }
-    // setActiveDropdown(title);
   }
 
   return (
@@ -68,7 +67,7 @@ const DesktopMenu = ({ location }) => {
         if (pageLink.children) {
           return (
             <MenuDropdown
-              object={pageLink}
+              content={pageLink}
               handleMouseOver={() => handleMouseOver(pageLink.title)}
               activeDropdown={activeDropdown}
               setActiveDropdown={setActiveDropdown}
@@ -83,12 +82,10 @@ const DesktopMenu = ({ location }) => {
                  style={{minWidth: `${(pageLink.title.length * 7.5) + 16}px`}}
             >
               {pageLink.to === location.pathname ?
-                <button className={`${styles.pageLinkButton} ${styles.pageLinkButtonActive}`}
-                        disabled
-                >
-                          <span>
-                            {pageLink.title}
-                          </span>
+                <button className={`${styles.pageLinkButton} ${styles.pageLinkButtonActive}`} disabled>
+                  <span>
+                    {pageLink.title}
+                  </span>
                 </button> : (
                   <button className={styles.pageLinkButton}
                           onMouseEnter={() => setActiveDropdown(pageLink.title)}
