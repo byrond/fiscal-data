@@ -54,12 +54,7 @@ const SiteHeader = ({ lowerEnvMsg, location, glossaryEvent, glossaryClickEventHa
 
   const glossaryData = glossaryCsv?.allGlossaryCsv?.nodes;
 
-
-
   const clickHandler = (title) => {
-    if (title === 'Glossary'){
-      setOpenGlossary(true);
-    }
     Analytics.event({
       category: 'Sitewide Navigation',
       action: `Top ${title} Click`,
@@ -90,8 +85,6 @@ const SiteHeader = ({ lowerEnvMsg, location, glossaryEvent, glossaryClickEventHa
               aria-label="Fiscal Data logo - return to home page"
               to="/"
               onClick={() => clickHandler('Logo')}
-              // TODO: figure out what is going on with this onMouseOver prop
-              // onMouseOver={() => handleMouseEnterNonDropdown("Logo")}
             >
               <StaticImage
                 src="../../images/logos/fd-logo.svg"
@@ -102,7 +95,11 @@ const SiteHeader = ({ lowerEnvMsg, location, glossaryEvent, glossaryClickEventHa
                 width={192}
               />
             </Link>
-            <DesktopMenu location={location} />
+            <DesktopMenu
+              location={location}
+              glossaryClickHandler={setOpenGlossary}
+              clickHandler={clickHandler}
+            />
           </div>
           <Glossary
             termList={glossaryData}
