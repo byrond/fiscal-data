@@ -14,7 +14,6 @@ import {
 
 const DesktopMenu = ({ location, glossaryClickHandler, clickHandler }) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
-  // const []
 
   return (
     <div className={pageLinks} data-testid="pageLinks">
