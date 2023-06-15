@@ -126,6 +126,9 @@ const MenuDropdown = (
           {primaryChildren.map((link) => {
             if (link.to) {
               return (
+                <div key={link.title}
+                     className={dropdownListItem}
+                >
                 <Link
                   to={link.to}
                   activeClassName={activeDropdownLink}
@@ -135,7 +138,8 @@ const MenuDropdown = (
                 >
                   {link.title}
                 </Link>
-              )
+                </div>
+                  )
             } else {
               return (
                 <button
@@ -160,7 +164,9 @@ const MenuDropdown = (
       key={title}
       onBlur={(e) => handleBlur(e)}
       onMouseEnter={handleMouseEnter}
-      onFocus={handleMouseEnter}
+      onKeyPress={handleMouseEnter}
+      onClick={handleMouseEnter}
+      // onFocus={handleMouseEnter}
       role={'button'}
       tabIndex={0}
     >
