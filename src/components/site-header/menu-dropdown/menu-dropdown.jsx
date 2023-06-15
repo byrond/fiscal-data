@@ -32,7 +32,7 @@ const MenuDropdown = (
 
   const title = content.title;
 
-  const handleClick = (title) => {
+  const handlePageClick = (title) => {
     glossaryClickHandler();
     if (title === 'Topics') {
       const thisurl = typeof window !== 'undefined' ? window.location.href : '';
@@ -57,28 +57,19 @@ const MenuDropdown = (
   }
 
   const handleMouseEnter = () => {
-    setExpanded(true);
-    setActiveDropdown(title);
-    setToggleDropdown(true);
     setTimeout(() => {
-      setToggleDropdown(false)
-    }, 10)
+      setExpanded(true);
+      setActiveDropdown(title);
+      setToggleDropdown(true);
+      setTimeout(() => {
+        setToggleDropdown(false)
+      }, 10)
+    }, 20)
   }
 
   const handleMouseLeave = () => {
     setActiveDropdown(null);
   }
-
-  useEffect(() => {
-    if(activeDropdown !== title) {
-      setExpanded(false)
-      setToggleDropdown(true);
-      if (activeDropdown !== title) {
-        setToggleDropdown(false);
-      }
-    }
-  }, [activeDropdown])
-
 
   const handleBlur = (event) => {
     const currentTarget = event.currentTarget;
@@ -88,6 +79,17 @@ const MenuDropdown = (
       }
     });
   }
+
+  useEffect(() => {
+    if(activeDropdown !== title) {
+      setExpanded(false)
+      setToggleDropdown(true);
+      setTimeout(() => {
+        setToggleDropdown(false)
+      }, 10)
+    }
+  }, [activeDropdown])
+
 
   const childLayout = () => {
     if (content.children[0].children) {
@@ -107,7 +109,7 @@ const MenuDropdown = (
                       <Link
                         to={page.to}
                         activeClassName={activeDropdownLink}
-                        onClick={() => handleClick(title)}
+                        onClick={() => handlePageClick(title)}
                       >
                         {page.title}
                       </Link>
@@ -133,7 +135,7 @@ const MenuDropdown = (
                   to={link.to}
                   activeClassName={activeDropdownLink}
                   key={link.title}
-                  onClick={() => handleClick(link.title)}
+                  onClick={() => handlePageClick(link.title)}
                   style={{minWidth:`${(link.title.length * 7.5)+28}px`}}
                 >
                   {link.title}
@@ -144,7 +146,7 @@ const MenuDropdown = (
               return (
                 <button
                   key={link.title}
-                  onClick={() => handleClick(link.title)}
+                  onClick={() => handlePageClick(link.title)}
                   style={{minWidth:`${(link.title.length * 7.5)+28}px`}}
                 >
                   {link.title}
@@ -162,11 +164,8 @@ const MenuDropdown = (
     <div
       className={dropdown}
       key={title}
-      onBlur={(e) => handleBlur(e)}
       onMouseEnter={handleMouseEnter}
-      onKeyPress={handleMouseEnter}
-      onClick={handleMouseEnter}
-      // onFocus={handleMouseEnter}
+      onFocus={handleMouseEnter}
       role={'button'}
       tabIndex={0}
     >
@@ -182,6 +181,7 @@ const MenuDropdown = (
           className={`${dropdownContent} ${toggleDropdown ? dropdownHidden : ''}`}
           data-testid={'dropdownContent'}
           onMouseLeave={handleMouseLeave}
+          onBlur={(e) => handleBlur(e)}
           role={'presentation'}
         >
           {childLayout()}
