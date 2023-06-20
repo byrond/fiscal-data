@@ -7,13 +7,19 @@ import DtgTableHeading from './dtg-table-heading/dtg-table-heading';
 import DtgTableRow from './dtg-table-row/dtg-table-row';
 import { loadingTimeout, netLoadingDelay, setColumns } from './dtg-table-helper';
 import PaginationControls, { defaultPerPageOptions } from '../pagination/pagination-controls';
-import { pagedDatatableRequest, formatDateForApi } from '../../utils/api-utils';
+import {
+  pagedDatatableRequest,
+  formatDateForApi,
+  basicFetch,
+  buildSortParams
+} from '../../utils/api-utils';
 import NotShownMessage from '../dataset-data/table-section-container/not-shown-message/not-shown-message';
 
 import * as styles from './dtg-table.module.scss';
 import CustomLink from "../links/custom-link/custom-link";
 import Experimental from '../experimental/experimental';
 import { DataTable } from '../data-table/data-table';
+import {apiPrefix} from "../../utils/api-utils";
 
 const defaultRowsPerPage = 5;
 
@@ -43,6 +49,7 @@ export default function DtgTable({tableProps, perPage, setPerPage}) {
       )
   );
   const [tableData, setTableData] = useState(!shouldPage ? data : []);
+  const [dtgTableData, setDtgTableData] = useState(rawData);
   const [apiError, setApiError] = useState(tableProps.apiError || false);
   const [maxPage, setMaxPage] = useState(1);
   const [maxRows, setMaxRows] = useState(data.length > 0 ? data.length : 1);
@@ -90,12 +97,25 @@ export default function DtgTable({tableProps, perPage, setPerPage}) {
   };
 
   const makePagedRequest = async (resetPage) => {
+
     if (selectedTable && selectedTable.endpoint && !loadCanceled) {
       loadTimer = setTimeout(() => loadingTimeout(loadCanceled,setIsLoading), netLoadingDelay);
-
       const from = formatDateForApi(dateRange.from);
       const to = formatDateForApi(dateRange.to);
       const startPage = resetPage ? 1 : currentPage;
+
+      const sortParam = buildSortParams(selectedTable, selectedPivot);
+
+      basicFetch(`${apiPrefix}${selectedTable.endpoint}?filter=${selectedTable.dateField}:gte:${from},${selectedTable.dateField}`
+    + `:lte:${to}&sort=${sortParam}`)
+        .then(res => {
+          const totalCount = res.meta['total-count'];
+          basicFetch(`${apiPrefix}${selectedTable.endpoint}?filter=${selectedTable.dateField}:gte:${from},${selectedTable.dateField}`
+            + `:lte:${to}&sort=${sortParam}&page[size]=${totalCount}`)
+          .then(data => {
+            setDtgTableData(data);
+          });
+        });
 
       pagedDatatableRequest(selectedTable, from, to, selectedPivot, startPage, itemsPerPage)
         .then(res => {
@@ -305,6 +325,12 @@ export default function DtgTable({tableProps, perPage, setPerPage}) {
         {rawData && (
           <DataTable rawData={rawData} />
         )}
+        {/*FOR WHEN RAW DATA IS UNAVAILABLE*/}
+        {
+          dtgTableData && (
+            <DataTable rawData={dtgTableData} />
+          )
+        }
       </Experimental>
     </div>
   );
