@@ -52,7 +52,7 @@ const getFirstElPadding = (chartView, isMobile) => {
   return '32px';
 };
 
-export const dataHeader = (chartToggleConfig, headingValues, gaEvent, setStartAnimation) => {
+export const dataHeader = (chartToggleConfig, headingValues, gaEvent) => {
   if (!chartToggleConfig) return;
   const {
     setSelectedChartView,
@@ -92,7 +92,6 @@ export const dataHeader = (chartToggleConfig, headingValues, gaEvent, setStartAn
           onClick={() => {
             setSelectedChartView('totalSpending');
             gaEvent('19');
-            setStartAnimation(true);
           }}
           id={'total-spending-toggle'}
         >
@@ -122,7 +121,6 @@ export const dataHeader = (chartToggleConfig, headingValues, gaEvent, setStartAn
           onClick={() => {
             setSelectedChartView('percentageGdp');
             gaEvent('19')
-            setStartAnimation(true);
           }}
           id={'total-spending-toggle'}
         >
@@ -303,6 +301,7 @@ export const Point = ({ borderWidth, borderColor, point }) => {
 }
 
 export const lineChartCustomPoints = ({ currentSlice, borderWidth, borderColor, points }) => {
+  console.log(currentSlice)
   const getLastValue = (values, name) =>
     values.filter(g => g.serieId === name).sort((a,b) => a.id.localeCompare(b.id, undefined, {numeric: true})).pop();
 

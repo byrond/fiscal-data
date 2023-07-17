@@ -18,8 +18,12 @@ import React, { useEffect, useState } from 'react';
   const [secondaryAnimationTriggeredOnce, setSecondaryAnimationTriggeredOnce] = useState(false);
 
   useEffect(() => {
-    if (inView && data.length && (!animationTriggeredOnce || selectedChartView === 'percentageGdp')) {
+    if (inView && data.length && (!animationTriggeredOnce || (selectedChartView === 'percentageGdp' && !secondaryAnimationTriggeredOnce))) {
       setAnimationTriggeredOnce(true);
+      if (selectedChartView === 'percentageGdp') {
+        setSecondaryAnimationTriggeredOnce(true);
+      }
+
       const stepDuration = duration ? duration : 50;
 
       slices.forEach((slice, index) => {

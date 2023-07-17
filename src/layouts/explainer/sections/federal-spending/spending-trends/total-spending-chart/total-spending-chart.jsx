@@ -68,7 +68,6 @@ const TotalSpendingChart = ({ width, cpiDataByYear, beaGDPData, copyPageData }) 
   const [maxGDPValue, setMaxGDPValue] = useState(0);
   const [selectedChartView, setSelectedChartView] = useState('totalSpending');
   const [isMobile, setIsMobile] = useState(true);
-  const [startAnimation, setStartAnimation] = useState(false);
 
   const [totalSpendingHeadingValues, setTotalSpendingHeadingValues] = useState({});
 
@@ -373,7 +372,7 @@ const TotalSpendingChart = ({ width, cpiDataByYear, beaGDPData, copyPageData }) 
               subTitle={chartSubtitle}
               footer={chartFooter}
               date={lastUpdatedDate}
-              header={dataHeader(chartToggleConfig, totalSpendingHeadingValues, handleClick, setStartAnimation)}
+              header={dataHeader(chartToggleConfig, totalSpendingHeadingValues, handleClick)}
               altText={chartAltText}
               customHeaderStyles={{ marginTop: '0.5rem', marginBottom: '0' }}
             >
@@ -457,7 +456,7 @@ const TotalSpendingChart = ({ width, cpiDataByYear, beaGDPData, copyPageData }) 
                       ? chartConfigs.axisLeftPercent
                       : chartConfigs.axisLeftSpending
                   }
-                  useMesh={true}
+                  useMesh={false}
                   isInteractive={true}
                   enableCrosshair={true}
                   crosshairType={'x'}
