@@ -20,8 +20,9 @@ import {
   CartesianGrid,
   Label,
   Customized,
+  Legend,
 } from 'recharts';
-import { Legend, Tooltip } from 'chart.js';
+// import { Legend, Tooltip } from 'chart.js';
 
 const fallbackComponent = () => {
   return (
@@ -47,9 +48,29 @@ const ExperimentalPage = () => {
     {
       year: '2019',
       // top
-      debt: 21.5,
+      debt: 2.0,
+      none: 1.0,
+      debt2: 2.0,
+      none2: 1.0,
+      debt3: 2.0,
+      none3: 1.0,
+      debt4: 2.0,
+      none4: 1.0,
+      debt5: 2.0,
+      none5: 1.0,
+      debt6: 2.0,
+      none6: 1.0,
+      debt7: 2.0,
+      none7: 1.0,
+      debt8: 2.0,
+      none8: 1.0,
+      debt9: 2.0,
+      none9: 1.0,
+      debt10: 2.0,
       //bottom
       deficit: 0.9,
+      none10: 1.0,
+      deficit2: 2.0,
     },
     {
       year: '2020',
@@ -226,14 +247,149 @@ const ExperimentalPage = () => {
               tickFormatter={v => `$${v}`}
             />
             <YAxis type="category" dataKey="year" reversed="true" />
-            <Legend />
+            {/*<Legend />*/}
             <Bar
               name="Debt"
               dataKey="debt"
               stackId="a"
               fill="#4B1B79"
               layout={'horizontal'}
-              legendType="circle"
+              // legendType="circle"
+            />
+            <Bar
+              name=""
+              dataKey="none"
+              stackId="a"
+              fill="#00000000"
+              layout={'horizontal'}
+            />
+            <Bar
+              name="Debt"
+              dataKey="debt2"
+              stackId="a"
+              fill="#4B1B79"
+              layout={'horizontal'}
+              // legendType="circle"
+            />
+            <Bar
+              name=""
+              dataKey="none2"
+              stackId="a"
+              fill="#00000000"
+              layout={'horizontal'}
+            />
+            <Bar
+              name="Debt"
+              dataKey="debt3"
+              stackId="a"
+              fill="#4B1B79"
+              layout={'horizontal'}
+              // legendType="circle"
+            />
+            <Bar
+              name=""
+              dataKey="none3"
+              stackId="a"
+              fill="#00000000"
+              layout={'horizontal'}
+            />
+            <Bar
+              name="Debt"
+              dataKey="debt4"
+              stackId="a"
+              fill="#4B1B79"
+              layout={'horizontal'}
+              // legendType="circle"
+            />
+            <Bar
+              name=""
+              dataKey="none4"
+              stackId="a"
+              fill="#00000000"
+              layout={'horizontal'}
+            />
+            <Bar
+              name="Debt"
+              dataKey="debt5"
+              stackId="a"
+              fill="#4B1B79"
+              layout={'horizontal'}
+              // legendType="circle"
+            />
+            <Bar
+              name=""
+              dataKey="none5"
+              stackId="a"
+              fill="#00000000"
+              layout={'horizontal'}
+            />
+            <Bar
+              name="Debt"
+              dataKey="debt6"
+              stackId="a"
+              fill="#4B1B79"
+              layout={'horizontal'}
+              // legendType="circle"
+            />
+            <Bar
+              name=""
+              dataKey="none6"
+              stackId="a"
+              fill="#00000000"
+              layout={'horizontal'}
+            />
+            <Bar
+              name="Debt"
+              dataKey="debt7"
+              stackId="a"
+              fill="#4B1B79"
+              layout={'horizontal'}
+              // legendType="circle"
+            />
+            <Bar
+              name=""
+              dataKey="none7"
+              stackId="a"
+              fill="#00000000"
+              layout={'horizontal'}
+            />
+            <Bar
+              name="Debt"
+              dataKey="debt8"
+              stackId="a"
+              fill="#4B1B79"
+              layout={'horizontal'}
+              // legendType="circle"
+            />
+            <Bar
+              name=""
+              dataKey="none8"
+              stackId="a"
+              fill="#00000000"
+              layout={'horizontal'}
+            />
+            <Bar
+              name="Debt"
+              dataKey="debt9"
+              stackId="a"
+              fill="#4B1B79"
+              layout={'horizontal'}
+              // legendType="circle"
+            />
+            <Bar
+              name=""
+              dataKey="none9"
+              stackId="a"
+              fill="#00000000"
+              layout={'horizontal'}
+            />
+            <Bar
+              name="Debt"
+              dataKey="debt10"
+              stackId="a"
+              fill="#4B1B79"
+              layout={'horizontal'}
+              // legendType="circle"
             />
             <Bar
               name="Deficit"
@@ -241,7 +397,22 @@ const ExperimentalPage = () => {
               stackId="a"
               fill="#BD4E12"
               layout={'horizontal'}
-              legendType="circle"
+              // legendType="circle"
+            />
+            <Bar
+              name=""
+              dataKey="none10"
+              stackId="a"
+              fill="#00000000"
+              layout={'horizontal'}
+            />
+            <Bar
+              name="Deficit"
+              dataKey="deficit2"
+              stackId="a"
+              fill="#BD4E12"
+              layout={'horizontal'}
+              // legendType="circle"
             />
           </BarChart>
         }
