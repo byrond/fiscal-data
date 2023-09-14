@@ -80,9 +80,14 @@ export const SingleDateFilter: FunctionComponent<any> = ({
           },
         }}
         value={date}
-        onChange={newValue => setDate(dayjs(newValue))}
+        onChange={newValue => newValue === null ? setDate(null) : setDate(dayjs(newValue))}
         views={['year', 'month', 'day']}
-        slotProps={{ textField: { size: 'small' } }}
+        slotProps={{
+            textField: { size: 'small' },
+            actionBar: {
+              actions: ['clear']
+            }
+        }}
       />
     </LocalizationProvider>
   );
