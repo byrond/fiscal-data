@@ -20,37 +20,36 @@ import {
   container
 } from './debt-over-last-100y-linechart.module.scss';
 import {
+  addInnerChartAriaLabel,
   applyChartScaling,
   applyTextScaling,
 } from '../../../../explainer-helpers/explainer-charting-helper';
-import {
-  lineChartCustomPoints,
-  lineChartCustomSlices,
-} from '../../../federal-spending/spending-trends/total-spending-chart/total-spending-chart-helper';
+import { lineChartCustomPoints } from './debt-over-last-100y-linechart-helper';
+import CustomSlices from '../../../../explainer-helpers/custom-slice/custom-slice';
 import { apiPrefix, basicFetch } from '../../../../../../utils/api-utils';
 import { adjustDataForInflation } from '../../../../../../helpers/inflation-adjust/inflation-adjust';
 import simplifyNumber from '../../../../../../helpers/simplify-number/simplifyNumber';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import Analytics from '../../../../../../utils/analytics/analytics';
-import {getDateWithoutTimeZoneAdjust} from "../../../../../../utils/date-utils";
+import { getDateWithoutTimeZoneAdjust } from '../../../../../../utils/date-utils';
+import { useInView } from 'react-intersection-observer';
 
 const chartDataEndPoint =
   apiPrefix + 'v2/accounting/od/debt_outstanding?sort=-record_date&page[size]=101';
 
 let gaTimerDebt100Yrs;
+let ga4Timer;
 
 const DebtOverLast100y = ({ cpiDataByYear, width }) => {
-  const [debtChartData, setDebtChartData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [minYear, setMinYear] = useState(2015);
   const [maxYear, setMaxYear] = useState(2022);
   const [maxAmount, setMaxAmount] = useState(0);
   const [lastUpdatedDate, setLastUpdatedDate] = useState(new Date());
-  const [lastDebtValue, setlastDebtValue] = useState('');
+  const [lastDebtValue, setLastDebtValue] = useState('');
   const [firstDebtValue, setFirstDebtValue] = useState('');
   const [chartData, setChartData] = useState(null);
-  const [isMobile, setIsMobile] = useState(true);
   const [totalDebtHeadingValues, setTotalDebtHeadingValues] = useState({});
 
   const chartParent = 'totalDebtChartParent';
@@ -66,10 +65,9 @@ const DebtOverLast100y = ({ cpiDataByYear, width }) => {
           'record_date',
           cpiDataByYear
         );
-
         const finalDebtChartData = [];
 
-        res.data.map(debt => {
+        res.data.forEach(debt => {
           finalDebtChartData.push({
             x: parseInt(debt.record_fiscal_year),
             y: parseInt(debt.debt_outstanding_amt),
@@ -78,10 +76,7 @@ const DebtOverLast100y = ({ cpiDataByYear, width }) => {
             record_date: debt.record_date,
           });
         });
-
         finalDebtChartData.reverse();
-
-        setDebtChartData(finalDebtChartData);
 
         const debtMaxYear = finalDebtChartData.reduce((max, spending) =>
           max.x > spending.x ? max : spending
@@ -96,9 +91,6 @@ const DebtOverLast100y = ({ cpiDataByYear, width }) => {
         const debtMaxAmount = finalDebtChartData.reduce((max, spending) =>
           max.y > spending.y ? max : spending
         );
-        const debtMinAmount = finalDebtChartData.reduce((min, spending) =>
-          min.y < spending.y ? min : spending
-        );
 
         const debtMaxAmountRoundedUp =
           Math.ceil(debtMaxAmount.y / 5000000000000) * 5000000000000;
@@ -108,7 +100,7 @@ const DebtOverLast100y = ({ cpiDataByYear, width }) => {
         const debtLastAmountActual =
           finalDebtChartData[finalDebtChartData.length - 1].y;
 
-        setlastDebtValue(simplifyNumber(debtLastAmountActual, true));
+        setLastDebtValue(simplifyNumber(debtLastAmountActual, true));
         setFirstDebtValue(simplifyNumber(debtFirstAmountActual, true));
 
         const lastUpdatedDateDebt = new Date(finalDebtChartData[finalDebtChartData.length - 1].record_date);
@@ -134,6 +126,7 @@ const DebtOverLast100y = ({ cpiDataByYear, width }) => {
           chartWidth.toString(),
           chartHeight.toString()
         );
+        addInnerChartAriaLabel(chartParent);
       }
     });
   }, []);
@@ -182,17 +175,29 @@ const DebtOverLast100y = ({ cpiDataByYear, width }) => {
         label: 'Debt - U.S. Federal Debt Trends Over the Last 100 Years',
       });
     }, 3000);
+    ga4Timer = setTimeout(() => {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        'event': 'chart-hover-debt-100y',
+      });
+    }, 3000);
   };
   const handleChartMouseLeave = () => {
     clearTimeout(gaTimerDebt100Yrs);
+    clearTimeout(ga4Timer);
   };
 
   const customHeaderStyles={
-    marginTop: "1rem",
+    marginTop: '1rem',
   }
   const customFooterSpacing={
-    marginTop: "2rem",
+    marginTop: '2rem',
   }
+  const { ref, inView } = useInView({
+    threshold: 0,
+    triggerOnce: true,
+    rootMargin: '-50% 0% -50% 0%',
+  });
 
   return (
     <>
@@ -219,6 +224,8 @@ const DebtOverLast100y = ({ cpiDataByYear, width }) => {
                 data-testid={'totalDebtChartParent'}
                 onMouseEnter={handleChartMouseEnter}
                 onMouseLeave={handleChartMouseLeave}
+                role="presentation"
+                ref={ref}
               >
                 <Line
                   data={chartData}
@@ -231,10 +238,12 @@ const DebtOverLast100y = ({ cpiDataByYear, width }) => {
                     'lines',
                     lineChartCustomPoints,
                     props =>
-                      lineChartCustomSlices(
-                        props,
-                        handleGroupOnMouseLeave,
-                        handleMouseLeave
+                      CustomSlices({
+                        ...props,
+                        groupMouseLeave: handleGroupOnMouseLeave,
+                        mouseMove: handleMouseLeave,
+                        inView,
+                      }
                       ),
                     'mesh',
                     'legends',

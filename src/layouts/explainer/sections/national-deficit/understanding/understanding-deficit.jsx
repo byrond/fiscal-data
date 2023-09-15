@@ -10,26 +10,30 @@ import React, {useEffect, useState} from "react";
 import 'react-tabs/style/react-tabs.css';
 import SurplusIllustration from "./surplus-illustration/surplus-illustration";
 import DeficitComparisonBarChart from "./deficit-comparison-bar-chart/deficit-comparison-bar-chart";
-import GlossaryTerm from "../../../../../components/glossary-term/glossary-term";
-import {apiPrefix, basicFetch} from "../../../../../../src/utils/api-utils";
-import {nationalDeficitSectionConfigs} from "../../national-deficit/national-deficit";
-import {getDateWithoutTimeZoneAdjust} from "../../../../../../src/utils/date-utils";
+import GlossaryPopoverDefinition from "../../../../../components/glossary/glossary-term/glossary-popover-definition";
+import {apiPrefix, basicFetch} from "../../../../../utils/api-utils";
+import {nationalDeficitSectionConfigs} from "../national-deficit";
 
-const UnderstandingDeficit = ({sectionId, glossary}) => {
+const UnderstandingDeficit = ({sectionId, glossary, glossaryClickHandler}) => {
   const spending =
-    <GlossaryTerm term={'spending'} page={'Deficit Explainer'} glossary={glossary}>
+    <GlossaryPopoverDefinition term="spending" page="Deficit Explainer" glossary={glossary} glossaryClickHandler={glossaryClickHandler}>
       spending
-    </GlossaryTerm>
+    </GlossaryPopoverDefinition>
 
   const revenue =
-    <GlossaryTerm term={'revenue'} page={'Deficit Explainer'} glossary={glossary}>
+    <GlossaryPopoverDefinition term="revenue" page="Deficit Explainer" glossary={glossary} glossaryClickHandler={glossaryClickHandler}>
       revenue
-    </GlossaryTerm>
+    </GlossaryPopoverDefinition>
 
   const surplus =
-    <GlossaryTerm term={'surplus'} page={'Deficit Explainer'} glossary={glossary}>
+    <GlossaryPopoverDefinition term="surplus" page="Deficit Explainer" glossary={glossary} glossaryClickHandler={glossaryClickHandler}>
       surplus
-    </GlossaryTerm>
+    </GlossaryPopoverDefinition>
+
+  const balanced =
+    <GlossaryPopoverDefinition term="Balanced Budget" page="Deficit Explainer" glossary={glossary} glossaryClickHandler={glossaryClickHandler}>
+      balanced
+    </GlossaryPopoverDefinition>
 
   const [lastFiscalYear, setLastFiscalYear] = useState(0);
   const [deficitLabel, setDeficitLabel] = useState("");
@@ -81,7 +85,7 @@ const UnderstandingDeficit = ({sectionId, glossary}) => {
   return (
     <div className={understandingDeficitContainer}>
       <div className={visWithCallout}>
-        <div className={textContent} data-testid={'textContent'}>
+        <div className={textContent} data-testid="textContent">
           <p>
             A budget deficit occurs when money going out ({spending}) exceeds money coming in
             ({revenue}) during a defined period. In FY {lastFiscalYear},
@@ -96,7 +100,7 @@ const UnderstandingDeficit = ({sectionId, glossary}) => {
           </p>
           <p>
             When there is no deficit or surplus due to spending and revenue being equal,
-            the budget is considered balanced.
+            the budget is considered {balanced}.
           </p>
         </div>
         <VisualizationCallout color={deficitExplainerPrimary} textWithCallout={true}>
@@ -106,7 +110,7 @@ const UnderstandingDeficit = ({sectionId, glossary}) => {
           </p>
         </VisualizationCallout>
       </div>
-      <SurplusIllustration glossary={glossary} />
+      <SurplusIllustration glossary={glossary} glossaryClickHandler={glossaryClickHandler} />
       <p>
         The chart below shows a breakdown of how the U.S. deficit compares to the corresponding
         revenue and spending.

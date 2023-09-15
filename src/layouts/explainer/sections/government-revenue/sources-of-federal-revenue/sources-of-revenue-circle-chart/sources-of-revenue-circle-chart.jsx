@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ChartContainer from '../../../../explainer-components/chart-container/chart-container';
 import { CirclePacking } from '@nivo/circle-packing';
 import {
@@ -27,7 +27,12 @@ import LabelComponent from './circle-chart-label';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { getDateWithoutTimeZoneAdjust } from '../../../../../../utils/date-utils';
-import {getShortForm, isBillionsOrTrillions} from "../../../../../../utils/rounding-utils";
+import {getShortForm} from "../../../../../../utils/rounding-utils";
+import Analytics from "../../../../../../utils/analytics/analytics";
+import {addInnerChartAriaLabel} from "../../../../explainer-helpers/explainer-charting-helper";
+
+let gaTimerRevenueCircle;
+let ga4Timer;
 
 const focusDelay = 1000;
 const SourcesOfRevenueCircleChart = ({ width }) => {
@@ -53,6 +58,13 @@ const SourcesOfRevenueCircleChart = ({ width }) => {
 
   const [chartAltText, setChartAltText] = useState('');
   const [elementToFocus, setElementToFocus] = useState(null);
+
+  const chartParent = 'chartParent';
+
+  useEffect(() => {
+    addInnerChartAriaLabel(chartParent);
+  }, [chartData])
+
   useEffect(() => {
     const url =
       'v1/accounting/mts/mts_table_9?filter=line_code_nbr:eq:120&sort=-record_date&page[size]=1';
@@ -235,6 +247,22 @@ const SourcesOfRevenueCircleChart = ({ width }) => {
     }
   };
 
+  const handleMouseEnterChart = () => {
+    gaTimerRevenueCircle = setTimeout(() => {
+      Analytics.event({
+        category: 'Explainers',
+        action: 'Chart Hover',
+        label: 'Revenue - Sources of Federal Revenue'
+      });
+    }, 3000);
+    ga4Timer = setTimeout(() => {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        'event': 'chart-hover-federal-rev',
+      });
+    }, 3000);
+  }
+
   const HandleLabelClick = (node, e) => {
     if (e) {
       e.stopPropagation();
@@ -254,7 +282,6 @@ const SourcesOfRevenueCircleChart = ({ width }) => {
 
     if (node.id !== categoryName) {
       decreaseOpacity();
-
       increaseOpacity(node);
       setCategoryName(node.id);
       setCategoryRevenueAmount(node.value);
@@ -273,6 +300,8 @@ const SourcesOfRevenueCircleChart = ({ width }) => {
   };
 
   const HandleChartMouseLeave = () => {
+    clearTimeout(gaTimerRevenueCircle);
+    clearTimeout(ga4Timer);
     if (chartData !== {}) {
       decreaseOpacity();
       highlightDefaultCircle();
@@ -308,12 +337,17 @@ const SourcesOfRevenueCircleChart = ({ width }) => {
           customSubTitleStyles={
             width < pxToNumber(breakpointLg) ? { fontSize: fontSize_12 } : {}
           }
+          customFooterStyles={
+            width < pxToNumber(breakpointLg) ? { fontSize: fontSize_12 } : {}
+          }
         >
           {chartData !== {} ? (
             <div className={dataContent}>
               <div
                 role="presentation"
                 className={chartSize}
+                data-testid={'chartParent'}
+                onMouseEnter={handleMouseEnterChart}
                 onMouseLeave={HandleChartMouseLeave}
                 onClick={HandleChartMouseLeave}
               >
@@ -344,7 +378,7 @@ const SourcesOfRevenueCircleChart = ({ width }) => {
                 />
               </div>
               <div className={totalRevenueDataPill}>
-                Total Revenue: ${isBillionsOrTrillions(totalRevenue.toString(), true)}
+                Total Revenue: ${getShortForm(totalRevenue.toString())}
               </div>
             </div>
           ) : (
@@ -357,7 +391,7 @@ const SourcesOfRevenueCircleChart = ({ width }) => {
           <p>
             In FY {fiscalYear}, the combined contribution of individual and
             corporate income taxes is $
-            {getShortForm(combinedIncomeAmount.toString(), 0, true, true)},
+            {getShortForm(combinedIncomeAmount.toString())},
             making up {combinedIncomePercent.toFixed()}% of total revenue.
           </p>
         </VisualizationCallout>

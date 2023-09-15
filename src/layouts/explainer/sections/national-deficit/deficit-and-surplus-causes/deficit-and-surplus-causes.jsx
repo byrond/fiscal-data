@@ -1,24 +1,34 @@
 import React from "react";
 import CustomLink from "../../../../../components/links/custom-link/custom-link";
-import GlossaryTerm from "../../../../../components/glossary-term/glossary-term";
-import Analytics from "../../../../../utils/analytics/analytics";
+import GlossaryPopoverDefinition from "../../../../../components/glossary/glossary-term/glossary-popover-definition";
 
-const DeficitAndSurplusCauses = ({glossary}) => {
+const DeficitAndSurplusCauses = ({glossary, glossaryClickHandler}) => {
   const federalCovidResponseLink =
     <CustomLink
-    url={'https://www.usaspending.gov/disaster/covid-19?publicLaw=all'}
-    eventNumber='14'
+    url="https://www.usaspending.gov/disaster/covid-19?publicLaw=all"
+    eventNumber="14"
     >
       the federal response to COVID-19
     </CustomLink>
 
+  const spendingLink =
+    <CustomLink url="/americas-finance-guide/federal-spending/" id="Federal Spending">
+      spending
+    </CustomLink>
+
+  const revenueLink =
+    <CustomLink url="/americas-finance-guide/government-revenue/" id="Government Revenue">
+      revenue
+    </CustomLink>
+
   const gdp =
-    <GlossaryTerm term={'gross domestic product (GDP)'}
-                  page={'Deficit Explainer'}
-                  glossary={glossary}
+    <GlossaryPopoverDefinition term={'gross domestic product (GDP)'}
+                               page={'Deficit Explainer'}
+                               glossary={glossary}
+                               glossaryClickHandler={glossaryClickHandler}
     >
       gross domestic product (GDP)
-    </GlossaryTerm>
+    </GlossaryPopoverDefinition>
 
   return (
     <div data-testid={'textContent'}>
@@ -33,8 +43,9 @@ const DeficitAndSurplusCauses = ({glossary}) => {
         spending also impacts the budget, creating deficits or surpluses.
       </p>
       <p>
-        Legislation increasing spending on Social Security, health care, and defense that outpace
-        revenue can increase the deficit. While revenue increased during the COVID-19 pandemic,
+        Legislation increasing {spendingLink} on Social Security, health care, and defense
+        that outpace {revenueLink} can increase the deficit.
+        While revenue increased during the COVID-19 pandemic,
         from approximately $3.5 trillion in 2019 to $4 trillion in 2021, increased government
         spending related to widespread unemployment and health care caused spikes in the deficit.
         Visit USAspending.gov to learn more about {federalCovidResponseLink}.

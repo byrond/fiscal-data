@@ -8,7 +8,6 @@ import SiteLayout from "../components/siteLayout/siteLayout";
 import HomeMainContent from '../components/home-main-content/home-main-content';
 import HomeFeatures from '../components/home-features/home-features';
 import LocationAware from '../components/location-aware/location-aware';
-import AnnouncementBanner from "../components/announcement-banner/announcement-banner";
 import TopicsSection from "../components/topics-section/topics-section";
 import {graphql, useStaticQuery} from "gatsby";
 
@@ -31,8 +30,6 @@ export const Index = () => {
       `,
   );
 
-  const topicsImages  = allFile;
-
   return (
     <>
       <SiteLayout isPreProd={ENV_ID === "preprod"}>
@@ -45,7 +42,7 @@ export const Index = () => {
             keywords="U.S. Treasury, Fiscal Data, machine readable data, API, government, government
           financial data, debt, Treasury, US government"
           />
-          <TopicsSection images={topicsImages} data-testid="topics-section" />
+          <TopicsSection images={allFile} data-testid="topics-section" />
           <HomeMainContent />
           <HomeFeatures />
         </div>

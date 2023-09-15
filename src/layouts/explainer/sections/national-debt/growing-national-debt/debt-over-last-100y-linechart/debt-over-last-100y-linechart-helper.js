@@ -1,16 +1,11 @@
 import React from 'react';
 import CustomLink from '../../../../../../components/links/custom-link/custom-link';
 import * as styles from './debt-over-last-100y-linechart.module.scss';
-import {
-  breakpointLg,
-  fontSize_10,
-  fontSize_14,
-  semiBoldWeight,
-} from '../../../../../../variables.module.scss';
-import { pxToNumber } from '../../../../../../helpers/styles-helper/styles-helper';
-import simplifyNumber from '../../../../../../helpers/simplify-number/simplifyNumber';
 import numeral from "numeral";
 import Analytics from '../../../../../../utils/analytics/analytics';
+import {
+  Point
+} from '../../../federal-spending/spending-trends/total-spending-chart/total-spending-chart-helper';
 
 const analyticsClickHandler = (action, section) => {
   Analytics.event({
@@ -29,6 +24,7 @@ const hdoLink = (
         "U.S. Federal Debt Trends Over the Last 100 Years"
       )
     }
+    id="Historical Debt Outstanding"
   >
     Historical Debt Outstanding
   </CustomLink>
@@ -36,7 +32,7 @@ const hdoLink = (
 
 const bls = (
   <CustomLink
-    url={'https://www.bls.gov/'}
+    url={'https://www.bls.gov/developers/'}
     onClick={() =>
       analyticsClickHandler(
         "Citation Click",
@@ -62,7 +58,8 @@ export const getChartCopy = (minYear, maxYear, selectedChartView) => {
     subtitle: `Inflation Adjusted - ${maxYear} Dollars`,
     footer: footer,
     altText:
-      'Line graph displaying the amount of debt in trillions from 1922 to 2022. The graph shows a steady trend with an increase beginning around 1940 continuing through today.',
+      'Line graph displaying the amount of debt in trillions from 1922 to 2022. The graph shows a steady trend with an ' +
+      'increase beginning around 1940 continuing through today.',
   };
 };
 
@@ -71,11 +68,11 @@ export const dataHeader = headingValues => {
   return (
     <div className={styles.headerContainer}>
       <div>
-        <div className={styles.header}>{fiscalYear}</div>
+        <div className={styles.header} data-testid="dynamic-year-header">{fiscalYear}</div>
         <span className={styles.subHeader}>Fiscal Year</span>
       </div>
       <div>
-        <div className={styles.header}>{totalDebt}</div>
+        <div className={styles.header} data-testid="dynamic-value-header">{totalDebt}</div>
         <span className={styles.subHeader}>Total Debt</span>
       </div>
     </div>
@@ -137,21 +134,20 @@ export const chartConfigs = {
   },
 };
 
-export const getMarkers = (width) => {
-  const markerStyle = {
-    axis: "y",
-    background: "#666666",
-    lineStyle: { strokeWidth: 0 },
-    textStyle: {
-      fontWeight: semiBoldWeight,
-      fill: "#666666",
-      fontSize: width < pxToNumber(breakpointLg) ? fontSize_10 : fontSize_14,
-    },
-  };
-  return [
-    {
-      ...markerStyle,
-    },
-  ];
+export const lineChartCustomPoints = ({ currentSlice, borderWidth, borderColor, points }) => {
+
+  const lastPoint = points.filter(g => g.serieId === 'Total Debt').sort((a,b) => a.id.localeCompare(b.id, undefined, {numeric: true})).pop();
+
+  const currentPrimaryPoint = currentSlice?.points?.length
+    ? currentSlice.points[0]
+    : lastPoint;
+
+  return (
+    <g data-testid="customPoints">
+      {currentPrimaryPoint && (
+        <Point borderColor={borderColor} borderWidth={borderWidth} point={currentPrimaryPoint} />
+      )}
+    </g>
+  );
 };
 

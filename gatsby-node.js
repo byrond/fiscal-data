@@ -3,6 +3,8 @@ const { freshExplainerPages } = require("./src/transform/explainer-pages-config"
 const { getEndpointConfigsById } = require( './src/transform/endpointConfig');
 const { sortPublishers } = require('./src/transform/filters/filterDefinitions');
 let { filters } = require('./src/transform/filters/filterDefinitions');
+const fs = require('fs');
+
 
 // TODO:  remove preprod holdover and give all environments and env config filename that directly
 //  matches the build-time process.env.BUILD_ENV
@@ -164,7 +166,7 @@ exports.sourceNodes = async ({ actions, createNodeId, createContentDigest }) => 
   const topics = freshTopics();
   const explainerPages = freshExplainerPages();
 
-  await datasets.forEach(async dataset => {
+  for (const dataset of datasets) {
     dataset.id = createNodeId(dataset.datasetId);
     const node = {
       ...dataset,
@@ -176,7 +178,7 @@ exports.sourceNodes = async ({ actions, createNodeId, createContentDigest }) => 
     };
     node.internal.contentDigest = createContentDigest(node);
     createNode(node);
-  });
+  }
 
   topics.forEach(topic => {
     topic.id = createNodeId(topic.slug);
@@ -223,7 +225,7 @@ exports.sourceNodes = async ({ actions, createNodeId, createContentDigest }) => 
     createNode(node);
   })
 
-  const blsPublicApiUrl = `https://api.bls.gov/publicAPI/v2/timeseries/data/CUUR0000SA0?registrationkey=8d808b5dd9914fd2a173a908be42baf4`;
+  const blsPublicApiUrl = `https://api.bls.gov/publicAPI/v2/timeseries/data/CUUR0000SA0?registrationkey=0270cf2d85494f99aeab578067ad5d9c`;
   const getBLSData = async () => {
     return new Promise((resolve, reject) => {
       fetch(blsPublicApiUrl)
@@ -242,26 +244,37 @@ exports.sourceNodes = async ({ actions, createNodeId, createContentDigest }) => 
     });
   }
 
-  const resultData = await getBLSData().then(res => res)
-    .catch(error => {
-      throw error
+  // use locally for BLS failures
+  // const getResultData = require('./static/data/CPI/bls-fallback-data.json');
+
+  let resultData;
+
+  fs.readFile('./static/data/bls-data.json', 'utf8', async (err, data) => {
+    if (err) {
+      resultData = await getBLSData().then(res => res)
+        .catch(error => {
+          throw error
+        });
+      console.warn('USING BLS API RESPONSE');
+    } else {
+      resultData = JSON.parse(data);
+    }
+    resultData.Results.series[0].data.forEach((blsRow) => {
+      blsRow.id = createNodeId(blsRow.year + blsRow.period);
+      const node = {
+        ...blsRow,
+        parent: null,
+        children: [],
+        internal: {
+          type: `BLSPublicAPIData`,
+        }
+      };
+      node.internal.contentDigest = createContentDigest(node);
+      createNode(node);
     });
-  resultData.Results.series[0].data.forEach((blsRow) => {
-    blsRow.id = createNodeId(blsRow.year + blsRow.period);
-    const node = {
-      ...blsRow,
-      parent: null,
-      children: [],
-      internal: {
-        type: `BLSPublicAPIData`,
-      }
-    };
-    node.internal.contentDigest = createContentDigest(node);
-    createNode(node);
-  });
+  })
 
-
-  const beaURL = `https://apps.bea.gov/api/data/?UserID=F9C35FFF-7425-45B0-B988-9F10E3263E9E&method=GETDATA&datasetname=NIPA&TableName=T10105&frequency=Q&year=2014-2015-2016-2017-2018-2019-2020-2021-2022-2023&ResultFormat=JSON`;
+  const beaURL = `https://apps.bea.gov/api/data/?UserID=F9C35FFF-7425-45B0-B988-9F10E3263E9E&method=GETDATA&datasetname=NIPA&TableName=T10105&frequency=Q&year=X&ResultFormat=JSON`;
 
   const fetchBEA = async () => {
     return new Promise((resolve, reject) => {
@@ -272,7 +285,7 @@ exports.sourceNodes = async ({ actions, createNodeId, createContentDigest }) => 
         .catch(error => {
           console.error(`failed to get metadata ${++numBEAAPICalls} time(s), error:${error}`);
           if (numBEAAPICalls < 3) {
-            getBLSData();
+            fetchBEA();
           } else {
             reject(error);
           }
@@ -285,9 +298,9 @@ exports.sourceNodes = async ({ actions, createNodeId, createContentDigest }) => 
   .catch(error => {
     throw error
   });
-  beaResults.BEAAPI.Results.Data.forEach((bea) =>{
+  beaResults.BEAAPI.Results.Data.forEach((bea) => {
 
-    if(bea.LineDescription == 'Gross domestic product'){
+    if(bea.LineDescription === 'Gross domestic product') {
       const node = {
         id: bea.TableName + bea.TimePeriod,
         lineDescription: bea.LineDescription,
@@ -324,6 +337,13 @@ exports.createSchemaCustomization = ({ actions }) => {
       columnName: String,
       prettyName: String
     }
+    type UserFilter {
+      field: String,
+      label: String,
+      notice: String,
+      optionValues: [String!],
+      dataUnmatchedMessage: String
+    }
     type SEOConfig {
       title: String,
       description: String,
@@ -333,10 +353,13 @@ exports.createSchemaCustomization = ({ actions }) => {
       publishedReports: [PublishedReport!],
       dataFormats: [String!],
       filters: [String!],
-      seoConfig: SEOConfig
+      seoConfig: SEOConfig,
+      customRangePreset: String,
+      selectColumns: [String]
     }
     type DatasetsApis implements Node {
       alwaysSortWith: [String!],
+      userFilter: UserFilter,
       apiNotesAndLimitations: String
     }
     type DatasetsApisDataDisplays implements Node {
@@ -387,6 +410,14 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
           slug
           relatedDatasets
           currentDateButton
+          datePreset
+          customRangePreset
+          bannerCallout {
+            banner
+            startDate
+            endDate
+          }
+          selectColumns
           relatedTopics
           filterTopics
           publisher
@@ -436,6 +467,13 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
             }
             dateField
             alwaysSortWith
+            userFilter {
+              field
+              label
+              notice
+              optionValues
+              dataUnmatchedMessage
+            }
             downloadName
             earliestDate
             endpoint
@@ -515,6 +553,7 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
   `);
 
   const glossaryData = result.data.allGlossaryCsv.glossaryCsv;
+  glossaryData.map((term) => term.slug = term.term.toLowerCase().split(' ').join('-'));
 
   result.data.allBlsPublicApiData.blsPublicApiData
     .filter(blsRow => blsRow.year > 2021 && (blsRow.period === "M12" || blsRow.latest === "true"))
@@ -532,6 +571,17 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
   })
 
   for (const config of result.data.allDatasets.datasets) {
+    if (config.apis[0].userFilter) {
+      let filterOptionsUrl = `${API_BASE_URL}/services/api/fiscal_service/`;
+      filterOptionsUrl += `${config.apis[0].endpoint}?fields=${config.apis[0].userFilter.field}`;
+      filterOptionsUrl += `&page[size]=10000&sort=${config.apis[0].userFilter.field}`;
+
+      const options = await fetch(filterOptionsUrl)
+      .then(res => res.json()
+      .then(body => body.data.map(row => row[config.apis[0].userFilter.field])
+      .sort((a,b)=>a.localeCompare(b))));
+      config.apis[0].userFilter.optionValues = [...new Set(options)]; // uniquify results
+    }
     createPage({
       path: `/datasets${config.slug}`,
       matchPath: '/datasets' + config.slug + '*',
@@ -586,6 +636,12 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
         }
       });
     }
+  });
+
+  createPage({
+    path: `/currency-exchange-rates-converter/`,
+    matchPath: '/currency-exchange-rates-converter/',
+    component: path.resolve(`./src/layouts/currency-exchange-rates-converter/index.tsx`),
   });
 
   if (ENV_ID !== 'production') {

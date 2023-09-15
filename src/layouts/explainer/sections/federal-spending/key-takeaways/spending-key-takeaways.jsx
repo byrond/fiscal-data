@@ -6,10 +6,10 @@ import {
   spendingExplainerLightSecondary,
 } from "../federal-spending.module.scss";
 import KeyTakeawaysSection from "../../../explainer-components/key-takeaways/key-takeaways-section";
-import {getShortForm} from "../../../heros/hero-helper";
+import {getShortForm} from "../../../../../utils/rounding-utils";
 
 
-const SpendingKeyTakeaways = ({glossary}) => {
+const SpendingKeyTakeaways = ({glossary, glossaryClickHandler}) => {
   const [latestCompleteFiscalYear, setLatestCompleteFiscalYear] = useState(0);
   const [priorYearSpendingShort, setPriorYearSpendingShort] = useState("");
   const [spendingRevComparison, setSpendingRevComparison] = useState("");
@@ -32,7 +32,7 @@ const SpendingKeyTakeaways = ({glossary}) => {
           const priorYearSpending = res.data[0].current_fytd_net_outly_amt;
           setLatestCompleteFiscalYear(fiscalYear);
           setPriorYearSpendingShort(
-            getShortForm(priorYearSpending.toString(), 2, false));
+            getShortForm(priorYearSpending.toString(), false));
 
           basicFetch(`${beaEndpointUrl}`)
             .then((bea_res) => {
@@ -118,6 +118,7 @@ const SpendingKeyTakeaways = ({glossary}) => {
       primaryColor={spendingExplainerPrimary}
       secondaryColor={spendingExplainerLightSecondary}
       glossary={glossary}
+      glossaryClickHandler={glossaryClickHandler}
     />
 );
 }

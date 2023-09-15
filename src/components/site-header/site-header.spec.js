@@ -1,14 +1,44 @@
 import React from 'react';
-import {fireEvent, render} from "@testing-library/react"
+import {fireEvent, waitFor, render, within, act} from "@testing-library/react"
 import SiteHeader from "./site-header";
-import * as styles from './site-header.module.scss';
 import * as rdd from 'react-device-detect';
 import SiteLayout from "../siteLayout/siteLayout";
 import Analytics from '../../utils/analytics/analytics';
+import { StaticQuery, useStaticQuery } from 'gatsby';
+import { mockUseStaticGlossaryData } from '../glossary/test-helper';
+import { createHistory, createMemorySource, LocationProvider } from '@reach/router';
+import "gatsby-env-variables";
+import '@testing-library/jest-dom/extend-expect'
 
 jest.useFakeTimers();
 
+jest.mock("gatsby-env-variables", () => ({
+  ENV_ID: 'dev',
+  API_BASE_URL: 'https://www.transparency.treasury.gov',
+  ADDITIONAL_DATASETS: {},
+  EXPERIMENTAL_WHITELIST: [],
+  NOTIFICATION_BANNER_TEXT: 'Test Page Name',
+  NOTIFICATION_BANNER_DISPLAY_PAGES: ['/', '/datasets/'],
+  NOTIFICATION_BANNER_DISPLAY_PATHS: ['/americas-finance-guide/'],
+}));
+
+const renderWithRouter = (ui, routeStr, {route=routeStr, history = createHistory(createMemorySource(route))} = {}) => {
+  return {
+    ...render(<LocationProvider history={history}>{ui}</LocationProvider>),
+    history
+  }
+}
 describe('SiteHeader', () => {
+
+
+  beforeEach(() => {
+    StaticQuery.mockImplementation(({ render }) => render({ mockUseStaticGlossaryData }));
+    useStaticQuery.mockImplementation(() => {
+      return {
+        ...mockUseStaticGlossaryData
+      };
+    });
+  });
 
   it('displays the the logo', async () => {
     const { getByTestId } = render(<SiteHeader />);
@@ -32,58 +62,12 @@ describe('SiteHeader', () => {
     expect(getByTitle('Return to home page')).toBeDefined();
   });
 
-  //search link
-  it('contains one link to the search page', () => {
-    const { getAllByTestId } = render(<SiteHeader />);
-    expect(getAllByTestId('search').length).toEqual(1);
-  });
-
-  //docs
-  it('contains one link to the api documentation page', () => {
-    const { getAllByTestId } = render(<SiteHeader />);
-    expect(getAllByTestId('apiDocs').length).toEqual(1);
-  });
-
-  //about
-  it('contains one link to the about us page', () => {
-    const { getAllByTestId } = render(<SiteHeader />);
-    expect(getAllByTestId('about').length).toEqual(1);
-  });
-
   it('displays the lowerEnvMessage when sent in props', () => {
     const message = 'Message';
     const { getByText } = render(<SiteHeader lowerEnvMsg={message} />);
     expect(getByText(message)).toBeDefined();
   });
 
-  it('displays the topics button', () => {
-    const { getByTestId } = render(<SiteHeader />);
-    expect(getByTestId('topicsButton')).toBeInTheDocument();
-  });
-
-  it('displays the topics drop down renders when mousing over topics button', () => {
-    const { getByTestId } = render(<SiteHeader />);
-    fireEvent.mouseEnter(getByTestId('topicsButton'));
-    expect(getByTestId('dropdownContent')).toBeInTheDocument();
-  });
-
-  it('displays the explainer buttons when the topics dropdown menu is open', () => {
-    const { getByTestId, getByText } = render(<SiteHeader />);
-    fireEvent.mouseEnter(getByTestId('topicsButton'));
-    expect(getByText('Debt')).toBeDefined();
-    expect(getByText('Deficit')).toBeDefined();
-    expect(getByText('Spending')).toBeDefined();
-    expect(getByText('Revenue')).toBeDefined();
-    expect(getByText('Overview')).toBeDefined();
-  })
-
-  it('expects that all of the header links are not active/highlighted by default', () => {
-    const { container } = render(<SiteHeader />);
-
-    expect(container
-      .getElementsByClassName(`${styles.activeLink}`).length
-    ).toBe(0);
-  });
 
   it('does not show browser notice if browser is not IE', () => {
     const { queryAllByTestId}  = render(<SiteHeader />);
@@ -99,14 +83,14 @@ describe('SiteHeader', () => {
   it('calls the appropriate analytics event when links are clicked on', () => {
     const spy = jest.spyOn(Analytics, 'event');
     const pageTitle = 'test page title'
-    const { getByTestId, getByText } = render(<SiteHeader />);
+    const { getByTestId, getByText, getByRole } = render(<SiteHeader/>);
     document.title = pageTitle;
 
     const logo = getByTestId('logo');
     const searchButton = getByTestId('search');
-    const apiDocsButton = getByTestId('apiDocs');
     const aboutButton = getByTestId('about');
-    const topicsButton = getByTestId('topicsButton');
+    const topicsButton = getByRole('button', {name: 'Topics'});
+    const resourcesButton = getByRole('button', {name: 'Resources'});
 
     logo.click();
     expect(spy).toHaveBeenCalledWith({
@@ -124,14 +108,6 @@ describe('SiteHeader', () => {
     });
     spy.mockClear();
 
-    apiDocsButton.click();
-    expect(spy).toHaveBeenCalledWith({
-      category: 'Sitewide Navigation',
-      action: `Top API Documentation Click`,
-      label: pageTitle
-    });
-    spy.mockClear();
-
     aboutButton.click();
     expect(spy).toHaveBeenCalledWith({
       category: 'Sitewide Navigation',
@@ -140,7 +116,10 @@ describe('SiteHeader', () => {
     });
     spy.mockClear();
 
-    fireEvent.mouseEnter(topicsButton);
+    act(() => {
+      fireEvent.mouseEnter(topicsButton);
+      jest.runAllTimers()
+    })
     const debtButton = getByText('Debt');
     debtButton.click();
     expect(spy).toHaveBeenCalledWith({
@@ -149,5 +128,77 @@ describe('SiteHeader', () => {
       label: 'Debt'
     });
     spy.mockClear();
+
+    act(() => {
+      fireEvent.mouseEnter(resourcesButton);
+      jest.runAllTimers()
+    })
+    const apiDocsButton = getByText('API Documentation');
+    apiDocsButton.click();
+    expect(spy).toHaveBeenCalledWith({
+      category: 'Sitewide Navigation',
+      action: `Top API Documentation Click`,
+      label: pageTitle
+    });
+    spy.mockClear();
+  });
+
+  it('displays announcement banner for specified pages', () => {
+    const { getByText } = renderWithRouter(<SiteHeader glossaryEvent={false} glossaryClickEventHandler={jest.fn()} />, '/datasets/');
+
+    expect(getByText("We're experiencing an issue", {exact: false})).toBeInTheDocument();
+    expect(getByText('Test Page Name', {exact: false})).toBeInTheDocument();
+  })
+
+  it('displays announcement banner for specified paths', () => {
+    const { getByText } =
+      renderWithRouter(<SiteHeader glossaryEvent={false} glossaryClickEventHandler={jest.fn()} />, '/americas-finance-guide/national-debt/');
+
+    expect(getByText("We're experiencing an issue", {exact: false})).toBeInTheDocument();
+    expect(getByText('Test Page Name', {exact: false})).toBeInTheDocument();
+  })
+
+  it('opens the glossary menu when selected', async () => {
+    const { getByRole, getByTestId } = render(<SiteHeader />);
+
+    act(() => {
+      fireEvent.mouseEnter(getByRole('button', {name: 'Resources'}));
+      jest.runAllTimers()
+    })
+    const glossaryButton = getByRole('button', {name: 'Glossary'});
+    fireEvent.click(glossaryButton);
+
+    await waitFor(() => {
+      expect(getByTestId('glossaryContainer')).toBeInTheDocument();
+      expect(getByTestId('glossaryContainer')).toHaveClass('open');
+    });
+  });
+
+  it('glossary menu closes when overlay is clicked', async () => {
+    const { getByRole, getByTestId, queryByTestId } =
+      render(<SiteHeader glossaryEvent={false} glossaryClickEventHandler={jest.fn()} />);
+
+    act(() => {
+      fireEvent.mouseEnter(getByRole('button', {name: 'Resources'}));
+      jest.runAllTimers()
+    })
+    const glossaryButton = getByRole('button', {name: 'Glossary'});
+
+    fireEvent.click(glossaryButton);
+    const glossary = getByTestId('glossaryContainer');
+
+    await waitFor(() => {
+      expect(glossary).toHaveClass('open');
+    });
+    const glossaryOverlay = within(glossary).getByTestId('overlay');
+
+    fireEvent(glossaryOverlay, new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+    }));
+
+    await waitFor(() => {
+      expect(glossary).not.toHaveClass('open');
+    });
   });
 });

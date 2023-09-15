@@ -15,7 +15,6 @@ import {
   revenueHover
 } from './explainer-helpers.module.scss';
 import NationalDebtHero from "../heros/national-debt/national-debt-hero";
-import globalConstants from "../../../helpers/constants";
 import {
   deficitExplainerPrimary,
   deficitExplainerSecondary,
@@ -157,16 +156,16 @@ export const explainerSocialShareMap = {
 
 export const explainerHeroMap = {
   'national-debt': {
-    component: (glossary) => <NationalDebtHero />
+    component: (glossary, glossaryClickHandler) => <NationalDebtHero />
   },
   'national-deficit': {
-    component: (glossary) => <NationalDeficitHero glossary={glossary} />
+    component: (glossary, glossaryClickHandler) => <NationalDeficitHero glossary={glossary} glossaryClickHandler={glossaryClickHandler} />
   },
   'federal-spending': {
-    component: (glossary) => <FederalSpendingHero />
+    component: (glossary, glossaryClickHandler) => <FederalSpendingHero />
   },
   'government-revenue': {
-    component: (glossary) => <GovernmentRevenueHero glossary={glossary} />
+    component: (glossary, glossaryClickHandler) => <GovernmentRevenueHero glossary={glossary} glossaryClickHandler={glossaryClickHandler} />
   }
 }
 
@@ -236,13 +235,17 @@ export const datasetSectionConfig = {
         endpoints:  [
           {
             name: 'Interest Expense',
-            path: 'v2/accounting/od/avg_interest_rates?filter=security_type_desc:eq:Interest-bearing%20Debt,record_calendar_day:eq:30,record_calendar_month:eq:09&sort=-record_date&page[size]=10',
+            path: 'v2/accounting/od/avg_interest_rates' +
+              '?filter=security_type_desc:eq:Interest-bearing%20Debt,record_calendar_day:eq:30,record_calendar_month:eq:09' +
+              '&sort=-record_date&page[size]=10',
             dateField: 'record_date',
             valueField: 'avg_interest_rate_amt'
           },
           {
             name: 'Total Debt',
-            path: 'v1/debt/mspd/mspd_table_1?filter=security_type_desc:eq:Total%20Public%20Debt%20Outstanding,record_calendar_day:eq:30,record_calendar_month:eq:09&sort=-record_date&page[size]=10',
+            path: 'v1/debt/mspd/mspd_table_1' +
+              '?filter=security_type_desc:eq:Total%20Public%20Debt%20Outstanding,record_calendar_day:eq:30,record_calendar_month:eq:09' +
+              '&sort=-record_date&page[size]=10',
             dateField: 'record_date',
             valueField: 'total_mil_amt'
           }

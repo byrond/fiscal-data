@@ -1,16 +1,16 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, fireEvent, within } from '@testing-library/react';
 import SearchResults, { getApiCount, resultsHeaderText, noResultsText } from './search-results';
 import { getSearchResultText } from '../search-result-count/search-result-count';
 import { SortOptions, FilteredSortOptions } from './search-results-helper';
 import { sortSelectionContainer } from './search-results.module.scss';
 
 const mockAllDatasets = [
-  { name: 'Dataset A' },
-  { name: 'Dataset B' },
-  { name: 'Dataset C' },
-  { name: 'Dataset D' },
-  { name: 'Dataset E' }
+  { name: 'Dataset A', techSpecs: { lastUpdated: 1/1/2000 } },
+  { name: 'Dataset B', techSpecs: { lastUpdated: 2/1/2000 } },
+  { name: 'Dataset C', techSpecs: { lastUpdated: 3/2/2000 } },
+  { name: 'Dataset D', techSpecs: { lastUpdated: 3/1/2000 } },
+  { name: 'Dataset E', techSpecs: { lastUpdated: 10/1/2000 } }
 ];
 const mockFilteredDatasets = [
   mockAllDatasets[0],
@@ -120,7 +120,7 @@ describe('Search Results', () => {
     );
 
     expect(getByText(SortOptions[0].label)).toBeInTheDocument();
-    
+
     rerender(
       <SearchResults
         allDatasets={mockAllDatasets}
@@ -129,7 +129,6 @@ describe('Search Results', () => {
         searchIsActive={false}
       />
     );
-    
     expect(getByText(FilteredSortOptions[0].label)).toBeInTheDocument();
   });
 
@@ -160,4 +159,33 @@ describe('Search Results', () => {
       expect(getByText(text)).toBeInTheDocument();
     }
   });
+
+  it('datalayer push for sort button passes correct params', () => {
+    window.dataLayer = window.dataLayer || [];
+    const datalayerSpy = jest.spyOn(window.dataLayer, 'push');
+    const { getByTestId } = render(
+      <SearchResults
+        allDatasets={mockAllDatasets}
+        filteredDatasets={mockFilteredDatasets}
+        totalCount={mockTotal}
+        searchIsActive={false}
+      />
+    );
+
+    expect(getByTestId('toggle-button')).toBeInTheDocument();
+
+    fireEvent.click(getByTestId('toggle-button'));
+
+    expect(getByTestId('selectorList')).toBeInTheDocument();
+
+    expect(within(getByTestId('selectorList')).getAllByTestId('selector-option')[1]).toBeInTheDocument();
+
+    fireEvent.click(within(getByTestId('selectorList')).getAllByTestId('selector-option')[1]);
+
+    expect(datalayerSpy).toHaveBeenCalledWith({
+      event: 'Sort Click',
+      eventLabel: 'Alphabetical (A to Z)'
+    });
+  });
+
 });

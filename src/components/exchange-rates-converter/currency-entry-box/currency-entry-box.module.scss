@@ -1,0 +1,117 @@
+@import 'src/variables.module';
+
+$border-color: #D9D9D9;
+
+.currencyBox {
+  width: 20rem;
+  margin: 0;
+  &:first-child {
+    margin-right: 3rem;
+  }
+
+  button:disabled {
+    opacity: 0.5;
+  }
+
+  .headerContainer {
+    display: flex;
+    span {
+      font-size: $font-size-12;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+      .headerIcon {
+        margin-right: .5rem;
+      }
+  }
+
+  .boxLabel {
+    font-size: $font-size-14;
+    margin: .5rem 0 .25rem;
+    &.activeLabel{
+      color: $primary;
+    }
+  }
+  .currencySelection {
+    background-color: $body-background;
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    span {
+      color: $font-title;
+      margin-left: 1rem;
+    }
+
+    .icon {
+      color: $font-body-copy;
+      height: 1rem;
+      width: 0.75rem;
+      margin-right: 0.75rem;
+    }
+  }
+
+
+  .currencySelection, .currencyText,  {
+    border-radius: 2px;
+  }
+
+  .comboCurrencySelection {
+    height: 2.75rem;
+  }
+
+
+  .currencyText {
+    border: solid 1px $border-color;
+    height: 2.75rem;
+    display: flex;
+    align-items: center;
+
+    span {
+      margin-left: 1rem;
+    }
+
+    &:hover {
+      border: solid 1px $font-body-copy;
+    }
+
+    &.activeBorder {
+      border: solid 1px $primary;
+      box-shadow: 0 0 0 .25rem #e8f5ff;
+    }
+
+    input[type=number]
+    {
+      background-color: transparent;
+      border-radius: 2px;
+      border: none;
+      font-size: 1rem;
+      color: $font-body-copy;
+      width: 95%;
+      height: 2.75rem;
+      padding-left: 1rem;
+      &:focus {
+        outline: solid 1px transparent;
+      }
+    }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+    }
+
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+  }
+
+}
+
+
+
+@media screen and (max-width: $breakpoint-lg - 1) {
+  .currencyBox {
+    margin: 1.5rem 0 0;
+    width: 100%;
+  }
+}

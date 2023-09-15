@@ -51,7 +51,7 @@ export type ChartConfig = {
 export type MultichartProperties = {
   chartConfigs: ChartConfig[],
   chartId: string,
-  hoverEffectHandler: any
+  hoverEffectHandler: (recordDate: string | null) => void
 }
 
 const Multichart: FunctionComponent<MultichartProperties> =
@@ -93,18 +93,19 @@ const Multichart: FunctionComponent<MultichartProperties> =
     let observer;
 
     if(typeof window !== "undefined") {
+      const config = {
+        rootMargin: '-50% 0% -50% 0%',
+        threshold: 0
+      };
       observer = new IntersectionObserver(entries => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             // animate data series display on chart upon initial scroll
-            document.querySelector('.multichart-scaled .area').classList.add('fill-right');
-            document.querySelector('.multichart-scaled .dataviz-line').classList.add('fill-right');
             setAnimateChart(true);
           }
         });
-      });
-      setTimeout(() =>
-        observer.observe(document.querySelector('[data-testid="multichart"]')), 1000);
+      }, config);
+      observer.observe(document.querySelector('[data-testid="multichart"]'));
     }
   }, []);
 
@@ -119,6 +120,7 @@ const Multichart: FunctionComponent<MultichartProperties> =
            data-testid="multichart"
            onMouseEnter={handleMouseEnter}
            onMouseLeave={handleMouseLeave}
+           role="presentation"
       />
     </>
   );

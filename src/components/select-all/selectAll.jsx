@@ -4,12 +4,12 @@ import { useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faMinus } from '@fortawesome/free-solid-svg-icons';
 
-const SelectAll = ({ fields, onUpdateFields,isVisible }) => {
+const SelectAll = ({ fields, onUpdateFields, isVisible, resetToFalse }) => {
   const [allSelected, setAllSelected] = useState(true);
   const [indeterminate, setIndeterminate] = useState(true);
   const inputRef = useRef();
-  const allFieldsChecked = fields.every((f) => f.active);
-  const allFieldsUnchecked = fields.every((f) => !f.active);
+  const allFieldsChecked = fields.every(f => f.active);
+  const allFieldsUnchecked = fields.every(f => !f.active);
 
   useEffect(() => {
     if (isVisible) {
@@ -23,8 +23,14 @@ const SelectAll = ({ fields, onUpdateFields,isVisible }) => {
 
       if (inputRef.current !== null) {
         if (allSelected && !allFieldsChecked && !allFieldsUnchecked) {
-          inputRef.current.indeterminate = true;
-          setIndeterminate(true);
+          if (resetToFalse) {
+            inputRef.current.indeterminate = false;
+            setIndeterminate(false);
+            setAllSelected(false);
+          } else {
+            inputRef.current.indeterminate = true;
+            setIndeterminate(true);
+          }
         } else {
           inputRef.current.indeterminate = false;
           setIndeterminate(false);
@@ -33,20 +39,19 @@ const SelectAll = ({ fields, onUpdateFields,isVisible }) => {
     }
   }, [isVisible, fields]);
 
-
-  const updateFields = (arr) => {
+  const updateFields = arr => {
     const updated = [];
-    arr.forEach((f) => {
+    arr.forEach(f => {
       const n = Object.assign({}, f, { active: true });
       updated.push(n);
-    })
+    });
     return updated;
-  }
-  const handleToggleSelectAll = (toggle) => {
+  };
+  const handleToggleSelectAll = toggle => {
     setAllSelected(toggle);
     const updated = toggle ? updateFields(fields) : [];
     onUpdateFields(updated);
-  }
+  };
 
   return (
     <div className={styles.container}>
@@ -54,6 +59,7 @@ const SelectAll = ({ fields, onUpdateFields,isVisible }) => {
         <label>
           <input
             name="selectAll"
+            onKeyDown={e => e.key === 'Enter' && handleToggleSelectAll(!allSelected)}
             onChange={() => handleToggleSelectAll(!allSelected)}
             id="selectAll"
             value={allSelected}
@@ -71,6 +77,6 @@ const SelectAll = ({ fields, onUpdateFields,isVisible }) => {
       </div>
     </div>
   );
-}
+};
 
 export default SelectAll;

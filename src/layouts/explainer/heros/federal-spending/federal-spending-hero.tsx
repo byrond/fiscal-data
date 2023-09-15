@@ -6,16 +6,15 @@ import {
 } from "../../hero-image/hero-image.module.scss";
 import React, {useEffect, useState} from "react";
 import CustomLink from "../../../../components/links/custom-link/custom-link";
-import {apiPrefix, basicFetch} from "../../../../utils/api-utils";
+import { apiPrefix, basicFetch } from "../../../../utils/api-utils";
 import {
-  getShortForm,
   getFootNotesDateRange,
   getPillData
 } from "../hero-helper";
-import {spendingExplainerLightSecondary, spendingExplainerPrimary} from
+import { spendingExplainerPrimary } from
     "../../sections/federal-spending/federal-spending.module.scss";
 import SplitFlapDisplay from "../../../../components/split-flap-display/split-flap-display";
-import {isBillionsOrTrillions} from "../../../../utils/rounding-utils";
+import { getShortForm } from "../../../../utils/rounding-utils";
 
 
 const FederalSpendingHero = (): JSX.Element => {
@@ -38,10 +37,13 @@ const FederalSpendingHero = (): JSX.Element => {
   const [spendingChange, setSpendingChange] = useState( 0);
   const [spendingPercentChange, setSpendingPercentChange] = useState(0);
 
+  const numberFormat = new Intl.NumberFormat('en-US');
+
     const mts =
     <CustomLink
-      url={'/datasets/monthly-treasury-statement/outlays-of-the-u-s-government'}
+      url="/datasets/monthly-treasury-statement/outlays-of-the-u-s-government"
       eventNumber="2"
+      id="Monthly Treasury Statement"
     >
       Monthly Treasury Statement (MTS)
     </CustomLink>
@@ -74,7 +76,7 @@ const FederalSpendingHero = (): JSX.Element => {
       });
   };
 
-  const rightTooltipText = 'The percentage change in spending compared to the last fiscal year in trillions $USD';
+  const rightTooltipText = 'The percentage change in spending compared to the same period last year.';
 
   useEffect(() => {
     getHeroData(spendingUrl);
@@ -83,33 +85,33 @@ const FederalSpendingHero = (): JSX.Element => {
   return (
     <>
       <p className={heroImageSubHeading}>
-        The U.S. government has spent ${isBillionsOrTrillions(totalSpending, false)} in
+        The U.S. government has spent ${getShortForm(totalSpending, false)} in
         fiscal year {recordFiscalYear} to ensure the well-being of the people of the United States.
       </p>
       <div className={counterContainerSpending}>
         <SplitFlapDisplay value={totalSpending}
-                          minLength={totalSpending?.toString().length} // number of characters to initially display
+                          minLength={numberFormat.format(parseInt(totalSpending)).length} // number of characters to initially display
                           mobilePrecision={parseInt(totalSpending) > 999999999999 ? 2 : 0}
                           valueType="currency"
         />
       </div>
       <div className={footNotes}>
         <p>
-          Fiscal Year-to-Date (since October {priorFiscalYear}) total updated monthly using
+          Fiscal year-to-date (since October {priorFiscalYear}) total updated monthly using
           the {mts} dataset.
         </p>
         <div className={footNotesPillData}>
           <p>
             Compared to the federal spending of
-            ${isBillionsOrTrillions(priorYearSpending.toString(), false)} for the same period
+            ${getShortForm(priorYearSpending.toString(), false)} for the same period
             last year
             ({getFootNotesDateRange(priorFiscalYear, priorCalendarYear, recordCalendarMonth)})
             our federal spending has {spendingChangeLabel} by
-            ${getShortForm(spendingChange.toString(), 0, false)}.
+            ${getShortForm(spendingChange.toString(), false)}.
           </p>
           {getPillData(spendingChange, spendingPercentChange, spendingChangeLabel,
             true, spendingExplainerPrimary+"25",
-            `The total amount spending has ${spendingChangeLabel} compared to the last fiscal year, in trillions $USD`,
+            `The total amount spending has ${spendingChangeLabel} compared to the same period last year.`,
             rightTooltipText)}
         </div>
       </div>

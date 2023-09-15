@@ -62,7 +62,7 @@ export const downloadsContext = React.createContext({
 
 export const DownloadsProvider = ({ children }) => {
   const [downloadQueue, setDownloadQueue] = useState([]);
-  const [downloadQueueByDataset, setDownloadQueueByDataset] = useState({});
+  const [downloadQueueByDataset] = useState({});
   const [downloadsPrepared, setDownloadsPrepared] = useState([]);
   const [downloadModalIsOpen, setDownloadModalIsOpen] = useState(false);
   const [preparingDownload, setPreparingDownload] = useState(false);
@@ -93,12 +93,16 @@ export const DownloadsProvider = ({ children }) => {
   const fileFromPath = (path) => (path + '').substring(path.lastIndexOf('/') + 1);
 
   const getDownloadSubscription = (download) => {
+
     const requestId = downloadService.initiateDownload(
       downloadRequest.datasetId,
       downloadRequest.apis,
       downloadRequest.dateRange,
       downloadRequest.selectedFileType,
-      downloadRequest.requestTime);
+      downloadRequest.requestTime,
+      downloadRequest.selectedUserFilter,
+      downloadRequest.tableColumnSortData,
+    );
 
     return downloadService.downloadStatus(requestId)
       .subscribe({
@@ -177,7 +181,9 @@ export const DownloadsProvider = ({ children }) => {
       dateRange: downloadRequest.dateRange,
       selectedFileType: downloadRequest.selectedFileType,
       datasetId: datasetId,
-      requestTime: downloadRequest.requestTime
+      requestTime: downloadRequest.requestTime,
+      selectedUserFilter: downloadRequest.selectedUserFilter,
+      tableColumnSortData: downloadRequest.tableColumnSortData
     };
     return JSON.stringify(newObj);
   };
@@ -197,7 +203,9 @@ export const DownloadsProvider = ({ children }) => {
           selectedFileType: downloadRequest.selectedFileType,
           filename: downloadRequest.filename,
           requestTime: downloadRequest.requestTime,
-          originalRequestHash: downloadRequest.originalRequestHash
+          originalRequestHash: downloadRequest.originalRequestHash,
+          selectedUserFilter: downloadRequest.selectedUserFilter,
+          tableColumnSortData: downloadRequest.tableColumnSortData,
         };
         downloadsInProgressByDataset[downloadRequest.datasetId] = download;
         setDownloadsInProgress(Object.values(downloadsInProgressByDataset)

@@ -11,10 +11,10 @@ import { getFootNotesDateRange, getPillData } from "../hero-helper"
 import {
   revenueExplainerLightSecondary } from "../../sections/government-revenue/revenue.module.scss"
 import SplitFlapDisplay from "../../../../components/split-flap-display/split-flap-display";
-import GlossaryTerm from "../../../../components/glossary-term/glossary-term";
-import {isBillionsOrTrillions, getShortForm} from "../../../../utils/rounding-utils";
+import GlossaryPopoverDefinition from "../../../../components/glossary/glossary-term/glossary-popover-definition";
+import {getShortForm} from "../../../../utils/rounding-utils";
 
-const GovernmentRevenueHero = ({glossary}): JSX.Element => {
+const GovernmentRevenueHero = ({glossary, glossaryClickHandler}): JSX.Element => {
 
   const fields: string = 'fields=current_fytd_net_rcpt_amt,prior_fytd_net_rcpt_amt,' +
     'record_calendar_month,record_calendar_year,record_fiscal_year,record_date';
@@ -25,7 +25,7 @@ const GovernmentRevenueHero = ({glossary}): JSX.Element => {
     = `v1/accounting/mts/mts_table_4?${fields}&${filter}&${sort}&${pagination}`;
   const revenueUrl: string = `${apiPrefix}${endpointUrl}`;
 
-  // appending 40 to a 6 digit hex color is equivalent to specifiying 25% opacity
+  // appending 40 to a 6 digit hex color is equivalent to specifying 25% opacity
   const pillColorWithTransparency = `${revenueExplainerLightSecondary}40`;
 
   const [currentRevenue, setCurrentRevenue] = useState(null);
@@ -38,8 +38,14 @@ const GovernmentRevenueHero = ({glossary}): JSX.Element => {
   const [revenueChange, setRevenueChange] = useState( 0);
   const [revenuePercentChange, setRevenuePercentChange] = useState(0);
 
+  const numberFormat = new Intl.NumberFormat('en-US');
+
   const mts =
-    <CustomLink url={'/datasets/monthly-treasury-statement/receipts-of-the-u-s-government'}>
+    <CustomLink
+      url="/datasets/monthly-treasury-statement/receipts-of-the-u-s-government"
+      eventNumber="4"
+      id="Monthly Treasury Statement"
+    >
       Monthly Treasury Statement (MTS)
     </CustomLink>
 
@@ -76,40 +82,46 @@ const GovernmentRevenueHero = ({glossary}): JSX.Element => {
   }, []);
 
   const expenditures = (
-    <GlossaryTerm
-      term={"Expenditures"}
-      page={"Revenue Explainer"}
+    <GlossaryPopoverDefinition
+      term="Expenditures"
+      page="Revenue Explainer"
       glossary={glossary}
+      glossaryClickHandler={glossaryClickHandler}
     >
       expenditures
-    </GlossaryTerm>
+    </GlossaryPopoverDefinition>
   );
+
+  const rightTooltip =
+    'The percentage change in revenue compared to the same period last year.';
+  const leftTooltip = (change) =>
+    `The total amount revenue has ${change} compared to the same period last year.`;
 
   return (
     <>
       <p className={heroImageSubHeading}>
         Government revenue is income received from taxes and other sources to
         pay for government {expenditures}. The U.S. government has collected $
-        {isBillionsOrTrillions(currentRevenue, false)} in fiscal year{" "}
+        {getShortForm(currentRevenue, false)} in fiscal year{" "}
         {recordFiscalYear}.
       </p>
       <div className={flapWrapper}>
         <SplitFlapDisplay
           value={currentRevenue}
           mobilePrecision={parseInt(currentRevenue) > 999999999999 ? 2 : 0}
-          minLength={currentRevenue?.toString().length}
+          minLength={numberFormat.format(parseInt(currentRevenue)).length}
           valueType="currency"
         />
       </div>
       <div className={footNotes}>
         <p>
-          Fiscal Year-to-Date (since October {priorFiscalYear}) total updated
+          Fiscal year-to-date (since October {priorFiscalYear}) total updated
           monthly using the {mts} dataset.
         </p>
         <div className={footNotesPillData}>
           <p>
             Compared to the federal revenue of $
-            {isBillionsOrTrillions(priorYearRevenue.toString(), false)} for the same
+            {getShortForm(priorYearRevenue.toString(), false)} for the same
             period last year (
             {getFootNotesDateRange(
               priorFiscalYear,
@@ -117,14 +129,16 @@ const GovernmentRevenueHero = ({glossary}): JSX.Element => {
               recordCalendarMonth
             )}
             ) federal revenue has {revenueChangeLabel} by $
-            {getShortForm(revenueChange.toString(), 0, false)}.
+            {getShortForm(revenueChange.toString(), false)}.
           </p>
           {getPillData(
             revenueChange,
             revenuePercentChange,
             revenueChangeLabel,
             true,
-            pillColorWithTransparency
+            pillColorWithTransparency,
+            leftTooltip(revenueChangeLabel),
+            rightTooltip
           )}
         </div>
       </div>

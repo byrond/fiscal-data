@@ -56,6 +56,7 @@ modules.xml
 runConfigurations.xml
 vcs.xml
 workspace.xml
+*.run.xml
 
 # Output of 'npm pack'
 *.tgz
@@ -75,8 +76,12 @@ dist
 yarn-error.log
 .pnp/
 .pnp.js
+
 # Yarn Integrity file
 .yarn-integrity
 
 # For VS Code users
 .vscode
+
+# scss type definitions
+*.scss.d.ts

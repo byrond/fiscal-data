@@ -42,7 +42,7 @@ const FilterTimeRange = ({ dateRangeFilter, maxAllowedDate, resetApplied }) => {
 
   const minAllowedDate = new Date(1790, 0, 1);
   minAllowedDate.setHours(0, 0, 0, 0);
-  
+
   const handleBeginDate = (date) => {
     setBeginDate(date);
     context.setBeginDate(date);
@@ -62,6 +62,11 @@ const FilterTimeRange = ({ dateRangeFilter, maxAllowedDate, resetApplied }) => {
   const handleCheckbox = () => {
     if (!checked) {
       Analytics.event(spanTimeRangeAnalyticsObject);
+      // GA4 - Span Time Range
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        'event': 'Time Range Click'
+      });
     }
 
     context.setExactRange(!checked);
@@ -88,10 +93,25 @@ const FilterTimeRange = ({ dateRangeFilter, maxAllowedDate, resetApplied }) => {
 
   const handleInfoTipClick = () => {
     Analytics.event(timeRangeInfoTipAnalyticsObject);
+
+    // GA4 event
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      'event': 'Info Button Click',
+      'eventLabel': 'Time Range'
+    });
   }
 
   useEffect(() => {
     prepDateFilterValue();
+    if(beginDate && endDate && !selecting){
+      // GA4 - Time Range Entry
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        'event': 'Time Range Entry',
+        'eventLabel': `${beginDate} - ${endDate}`
+      });
+    }
   }, [selecting, endDate, beginDate]);
 
   useEffect(() => {
@@ -201,8 +221,8 @@ const FilterTimeRange = ({ dateRangeFilter, maxAllowedDate, resetApplied }) => {
             />
           </div>
         </div>
-        <div className={styles.checkBoxDiv}>
-          <Checkbox checkboxData={checkboxData} changeHandler={handleCheckbox} />
+        <div className={styles.checkBoxDiv} data-testid={'checkbox'}>
+          <Checkbox checkboxData={checkboxData} changeHandler={handleCheckbox}/>
         </div>
       </div>
     </MuiPickersUtilsProvider>

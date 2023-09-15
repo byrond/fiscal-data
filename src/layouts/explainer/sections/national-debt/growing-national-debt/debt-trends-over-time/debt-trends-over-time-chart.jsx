@@ -1,39 +1,44 @@
-import {pxToNumber} from "../../../../../../helpers/styles-helper/styles-helper";
+import { pxToNumber } from '../../../../../../helpers/styles-helper/styles-helper';
 import {
   breakpointLg,
   debtExplainerPrimary,
   fontSize_10,
   fontSize_14
-} from "../../../../../../variables.module.scss";
-import React, {useEffect, useRef, useState} from "react";
-import CustomLink from "../../../../../../components/links/custom-link/custom-link";
-import Analytics from "../../../../../../utils/analytics/analytics";
-import {apiPrefix, basicFetch} from "../../../../../../utils/api-utils";
+} from '../../../../../../variables.module.scss';
+import React, {useEffect, useState} from 'react';
+import CustomLink from '../../../../../../components/links/custom-link/custom-link';
+import Analytics from '../../../../../../utils/analytics/analytics';
+import { apiPrefix, basicFetch } from '../../../../../../utils/api-utils';
 import {
-  debtTrendsOverTimeSectionGraphContainer,
+  container,
   lineChartContainer,
-  footerContainer,
   header,
   headerContainer,
   subHeader,
-  subTitle,
-  title
-} from "../../national-debt.module.scss";
-import {chartBackdrop, visWithCallout} from "../../../../explainer.module.scss";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faSpinner} from "@fortawesome/free-solid-svg-icons";
-import { Line } from "@nivo/line";
+  inAnimation,
+  animationCrosshair
+} from './debt-trends-over-time-chart.module.scss';
+import { visWithCallout } from '../../../../explainer.module.scss';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { Line } from '@nivo/line';
 import VisualizationCallout
-  from "../../../../../../components/visualization-callout/visualization-callout";
+  from '../../../../../../components/visualization-callout/visualization-callout';
 import {
   nationalDebtSectionConfigs,
-} from "../../national-debt";
+} from '../../national-debt';
 import {
+  addInnerChartAriaLabel,
   applyChartScaling,
   applyTextScaling,
 } from '../../../../explainer-helpers/explainer-charting-helper';
-let gaTimerDebtTrends;
+import globalConstants from '../../../../../../helpers/constants';
+import { getDateWithoutTimeZoneAdjust } from '../../../../../../utils/date-utils';
+import ChartContainer from '../../../../explainer-components/chart-container/chart-container';
+import CustomSlices from '../../../../explainer-helpers/custom-slice/custom-slice';
 
+let gaTimerDebtTrends;
+let ga4Timer;
 
 const analyticsClickHandler = (action, section) => {
   Analytics.event({
@@ -43,28 +48,27 @@ const analyticsClickHandler = (action, section) => {
   });
 };
 
-export const DebtTrendsOverTimeChart = ({ sectionId, width }) => {
+export const DebtTrendsOverTimeChart = ({ sectionId, beaGDPData, width }) => {
 
-  const [lineChartHoveredYear, setLinechartHoveredYear] = useState("");
-  const [lineChartHoveredValue, setLinechartHoveredValue] = useState("");
+  const [lineChartHoveredYear, setLineChartHoveredYear] = useState('');
+  const [lineChartHoveredValue, setLineChartHoveredValue] = useState('');
   const [debtTrendsData, setDebtTrendsData] = useState([]);
   const [isLoadingDebtTrends, setIsLoadingDebtTrends] = useState(true);
   const [lastDebtValue, setLastDebtValue] = useState({});
   const [startAnimation, setStartAnimation] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
   const [animationPoint, setAnimationPoint] = useState(0);
+  const [dataLoadAttemptsLeft, setDataLoadAttemptsLeft] = useState(globalConstants.DEFAULT_FETCH_RETRIES);
+  const [dataLoadError, setDataLoadError] = useState(false);
+
   const {
     name,
-    slug,
-    dateField,
-    valueField,
-    endpoint,
+    slug
   } = nationalDebtSectionConfigs[sectionId];
 
   const chartParent = 'debtTrendsChart';
   const chartWidth = 550;
   const chartHeight = 490;
-
 
   const historicalDebtOutstanding = (
     <CustomLink
@@ -75,6 +79,7 @@ export const DebtTrendsOverTimeChart = ({ sectionId, width }) => {
           "Federal Debt Trends Over Time"
         )
       }
+      id="Historical Debt Outstanding"
     >
       {name}
     </CustomLink>
@@ -99,103 +104,57 @@ export const DebtTrendsOverTimeChart = ({ sectionId, width }) => {
     "v2/accounting/od/debt_outstanding?sort=-record_date&filter=record_fiscal_year:gte:1948";
 
   useEffect(() => {
-    basicFetch(`${apiPrefix}${debtEndpointUrl}`).then(res => {
-      if (res.data) {
-        const debtData = res.data;
-        basicFetch(
-          `https://apps.bea.gov/api/data/?UserID=F9C35FFF-7425-45B0-B988-9F10E3263E9E&method=GETDATA&datasetname=NIPA&TableName=T10105&frequency=Q&year=X&ResultFormat=JSON`
-        ).then(res => {
-          if (res.BEAAPI.Results.Data) {
-            const gdpData = res.BEAAPI.Results.Data.filter(
-              entry => entry.LineDescription === "Gross domestic product"
+    if (dataLoadAttemptsLeft > 0) {
+      const {finalGDPData} = beaGDPData;
+      basicFetch(`${apiPrefix}${debtEndpointUrl}`).then(res => {
+        setDataLoadAttemptsLeft(-1);
+        if (res.data) {
+          const debtData = res.data;
+          const debtToGDP = [];
+          finalGDPData.forEach(GDPEntry => {
+            const record = debtData.find(entry =>
+              entry.record_date.includes(GDPEntry.fiscalYear)
             );
-            const averagedGDPByYear = [];
-            for (
-              let i = parseInt(
-                debtData[debtData.length - 1].record_fiscal_year
-              );
-              i <= parseInt(debtData[0].record_fiscal_year);
-              i++
-            ) {
-              let allQuartersForGivenYear;
-              if (i <= 1976) {
-                allQuartersForGivenYear = gdpData.filter(
-                  entry =>
-                    entry.TimePeriod.includes(i.toString() + "Q1") ||
-                    entry.TimePeriod.includes(i.toString() + "Q2") ||
-                    entry.TimePeriod.includes((i - 1).toString() + "Q3") ||
-                    entry.TimePeriod.includes((i - 1).toString() + "Q4")
-                );
-              } else if (i >= 1977) {
-                allQuartersForGivenYear = gdpData.filter(
-                  entry =>
-                    entry.TimePeriod.includes(i.toString() + "Q1") ||
-                    entry.TimePeriod.includes(i.toString() + "Q2") ||
-                    entry.TimePeriod.includes(i.toString() + "Q3") ||
-                    entry.TimePeriod.includes((i - 1).toString() + "Q4")
-                );
-              }
-              if (
-                i >= 1977 &&
-                allQuartersForGivenYear.find(entry =>
-                  entry.TimePeriod.includes(i.toString() + "Q3")
-                )
-              ) {
-                let totalGDP = 0;
-                allQuartersForGivenYear.forEach(quarter => {
-                  totalGDP += parseFloat(quarter.DataValue.replace(/,/g, ""));
-                });
-                averagedGDPByYear.push({
-                  // Correct BEA data to display in trillions
-                  average: parseInt(String(totalGDP) + "000000") / 4,
-                  year: i,
-                });
-              } else if (i <= 1976) {
-                let totalGDP = 0;
-                allQuartersForGivenYear.forEach(quarter => {
-                  totalGDP += parseFloat(quarter.DataValue.replace(/,/g, ""));
-                });
-                averagedGDPByYear.push({
-                  // Correct BEA data to display in trillions
-                  average: parseInt(String(totalGDP) + "000000") / 4,
-                  year: i,
-                });
-              }
-            }
-            const debtToGDP = [];
-            averagedGDPByYear.forEach(GDPEntry => {
-              const record = debtData.find(entry =>
-                entry.record_date.includes(GDPEntry.year)
-              );
+            if (record) {
               debtToGDP.push({
-                x: GDPEntry.year,
+                x: GDPEntry.x,
                 y: Math.round(
                   (parseFloat(record.debt_outstanding_amt) /
-                    GDPEntry.average) *
+                    GDPEntry.actual) *
                   100
                 ),
               });
-            });
-            const finalData = [
-              {
-                id: "us",
-                color: "hsl(219, 70%, 50%)",
-                data: debtToGDP,
-              },
-            ];
-            setDebtTrendsData(finalData);
-            setLastDebtValue(finalData[0].data[finalData[0].data.length - 1]);
-            setIsLoadingDebtTrends(false);
-            applyChartScaling(
-              chartParent,
-              chartWidth.toString(),
-              chartHeight.toString()
-            );
-          }
-        });
-      }
-    });
-  }, []);
+            }
+          });
+          const finalData = [
+            {
+              id: "us",
+              color: "hsl(219, 70%, 50%)",
+              data: debtToGDP,
+            },
+          ];
+          setDebtTrendsData(finalData);
+          setLastDebtValue(finalData[0].data[finalData[0].data.length - 1]);
+          setIsLoadingDebtTrends(false);
+          applyChartScaling(
+            chartParent,
+            chartWidth.toString(),
+            chartHeight.toString()
+          );
+          addInnerChartAriaLabel(chartParent);
+        }
+      }).catch(error => {
+        console.warn('Could not load data', error);
+        if (dataLoadAttemptsLeft === 1) { // this was the final attempt that failed
+          setDataLoadError(true);
+          setIsLoadingDebtTrends(false);
+        }
+        setTimeout(() => {
+          setDataLoadAttemptsLeft((attemptsState) => attemptsState - 1);
+        }, globalConstants.DEFAULT_FETCH_RETRY_TIMER);  // wait some time before trying again
+      });
+    }
+  }, [dataLoadAttemptsLeft]);
 
   useEffect(() => {
     applyTextScaling(chartParent, chartWidth, width, fontSize_10);
@@ -209,6 +168,12 @@ export const DebtTrendsOverTimeChart = ({ sectionId, width }) => {
     );
   }, []);
 
+  const customHeaderStyles = {
+    marginTop: "1rem",
+  }
+  const customFooterSpacing = {
+    marginTop: "2rem",
+  }
 
   const chartBorderTheme = {
     fontSize: width < pxToNumber(breakpointLg) ? fontSize_10 : fontSize_14,
@@ -221,38 +186,16 @@ export const DebtTrendsOverTimeChart = ({ sectionId, width }) => {
         },
       },
     },
+    crosshair: {
+      line: {
+        stroke: '#555555',
+        strokeWidth: 2,
+        pointerEvents: 'all'
+      }
+    }
   };
 
   const formatPercentage = v => `${v}%`;
-
-  const CustomSlices = ({ slices, setCurrentSlice }) => {
-    const allSlices =
-      <g>
-        {slices.map(slice => (
-          <rect
-            x={slice.x0}
-            y={slice.y0}
-            tabIndex={0}
-            width={slice.width + 1}
-            height={slice.height}
-            strokeWidth={1}
-            strokeOpacity={0}
-            fillOpacity={0}
-            onMouseEnter={() => setCurrentSlice(slice)}
-            onMouseLeave={() => {
-              setCurrentSlice(null);
-            }}
-          />
-        ))}
-      </g>;
-
-    return (
-      <>
-        {allSlices}
-      </>
-    );
-  };
-
 
   useEffect(() => {
     if(startAnimation && debtTrendsData && !animationComplete) {
@@ -296,34 +239,47 @@ export const DebtTrendsOverTimeChart = ({ sectionId, width }) => {
   const CustomPoint = props => {
     const { currentSlice, borderWidth, borderColor, points } = props;
     let currentPoint;
+    let verticalCrosshair;
     let observer;
-    if (!isLoadingDebtTrends) {
-      if(!animationComplete) {
-        if(typeof window !== "undefined") {
+    if (!isLoadingDebtTrends && !dataLoadError) {
+      if (!animationComplete) {
+        if (typeof window !== "undefined") {
           const config = {
             rootMargin: '-50% 0% -50% 0%',
             threshold: 0
-          }
+          };
           observer = new IntersectionObserver(entries => {
             entries.forEach((entry) => {
-              if(!startAnimation && entry.isIntersecting) {
+              if (!startAnimation && entry.isIntersecting) {
                 setStartAnimation(true);
               }
             })
-          }, config)
-          setTimeout(() =>
-            observer.observe(document.querySelector('[data-testid="debtTrendsChart"]')), 1000)
-
-        currentPoint = points[animationPoint];
+          }, config);
+          if (document.querySelector('[data-testid="debtTrendsChart"]')) {
+            observer.observe(document.querySelector('[data-testid="debtTrendsChart"]'));
+          }
+          currentPoint = points[animationPoint];
+          verticalCrosshair = (
+            <line
+              className={animationCrosshair}
+              x1={currentPoint.x}
+              x2={currentPoint.x}
+              y1={0}
+              y2={450}
+              style={{
+                ...chartBorderTheme.crosshair.line,
+                strokeDasharray: [6, 6]
+                }}
+            />
+          );
         }
-      }
-      else {
+      } else {
         currentPoint = currentSlice?.points?.length
           ? currentSlice.points[0]
           : points[points.length - 1];
       }
-      setLinechartHoveredValue(formatPercentage(currentPoint.data.y));
-      setLinechartHoveredYear(currentPoint.data.x);
+      setLineChartHoveredValue(formatPercentage(currentPoint.data.y));
+      setLineChartHoveredYear(currentPoint.data.x);
       return (
         <>
           <Point
@@ -331,163 +287,186 @@ export const DebtTrendsOverTimeChart = ({ sectionId, width }) => {
             borderColor={borderColor}
             borderWidth={borderWidth}
           />
+          {verticalCrosshair}
         </>
       );
     }
   };
 
-    const handleMouseEnterLineChart = () => {
-      gaTimerDebtTrends = setTimeout(() =>{
-        Analytics.event({
-          category: 'Explainers',
-          action: 'Chart Hover',
-          label: 'Debt - Federal Debt Trends Over Time'
-        });
-      }, 3000);
-    }
+  const handleMouseEnterLineChart = () => {
+    gaTimerDebtTrends = setTimeout(() =>{
+      Analytics.event({
+        category: 'Explainers',
+        action: 'Chart Hover',
+        label: 'Debt - Federal Debt Trends Over Time'
+      });
+    }, 3000);
+    ga4Timer = setTimeout(() => {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        'event': 'chart-hover-debt-trends',
+      });
+    }, 3000);
+  }
 
-    const handleMouseLeaveLineChart = () => {
-      clearTimeout(gaTimerDebtTrends);
-    };
-
-    const lineChartOnMouseLeave = () => {
-      setLinechartHoveredValue(formatPercentage(lastDebtValue.y));
-      setLinechartHoveredYear(lastDebtValue.x);
-    };
-
-    return (
-      <div className={visWithCallout}>
-        {isLoadingDebtTrends && (
-          <div>
-            <FontAwesomeIcon icon={faSpinner} spin pulse /> Loading...
-          </div>
-        )}
-        {!isLoadingDebtTrends && (
-          <>
-            <div>
-              <div className={debtTrendsOverTimeSectionGraphContainer}>
-                <p className={title}>
-                  {" "}
-                  Federal Debt Trends Over Time, FY 1948 – {lastDebtValue.x}
-                </p>
-                <p className={subTitle}>
-                  {" "}
-                  Debt to Gross Domestic Product (GDP){" "}
-                </p>
-                <div className={headerContainer}>
-                  <div>
-                    <div className={header}>
-                      {lineChartHoveredYear === ""
-                        ? lastDebtValue.x
-                        : lineChartHoveredYear}
-                    </div>
-                    <span className={subHeader}>Fiscal Year</span>
-                  </div>
-                  <div>
-                    <div className={header}>
-                      {lineChartHoveredValue === ""
-                        ? lastDebtValue.y + "%"
-                        : lineChartHoveredValue}
-                    </div>
-                    <span className={subHeader}>Debt to GDP</span>
-                  </div>
-                </div>
-                  <div
-                    className={`${lineChartContainer} ${chartBackdrop}`}
-                    data-testid={`${chartParent}`}
-                    onMouseEnter={handleMouseEnterLineChart}
-                    onMouseLeave={handleMouseLeaveLineChart}
-                    role={"img"}
-                    aria-label={`Line graph displaying the federal debt to GDP trend over time
-                    from ${debtTrendsData[0].data[0].x} to ${lastDebtValue.x}.`}
-                  >
-                    <Line
-                      data={debtTrendsData}
-                      width={chartWidth}
-                      height={chartHeight}
-                      theme={chartBorderTheme}
-                      layers={[
-                        "grid",
-                        "lines",
-                        "axes",
-                        CustomPoint,
-                        CustomSlices,
-                      ]}
-                        margin={
-                          width < pxToNumber(breakpointLg)
-                            ? { top: 10, right: 25, bottom: 40, left: 55 }
-                            : { top: 10, right: 25, bottom: 30, left: 50 }
-                        }
-                      xScale={{
-                        type: "linear",
-                        min: 1940,
-                        max: 2030,
-                      }}
-                      yScale={{
-                        type: "linear",
-                        min: 0,
-                        max: 140,
-                        stacked: true,
-                        reverse: false,
-                      }}
-                      yFormat=" >-.2f"
-                      axisTop={null}
-                      axisRight={null}
-                      axisBottom={{
-                        orient: "bottom",
-                        tickSize: 6,
-                        tickPadding: 8,
-                        tickRotation: 0,
-                        tickValues: 9,
-                      }}
-                      axisLeft={{
-                        format: formatPercentage,
-                        orient: "left",
-                        tickSize: 6,
-                        tickPadding: 8,
-                        tickValues: 8,
-                      }}
-                      enablePoints={false}
-                      enableSlices={"x"}
-                      pointSize={0}
-                      pointColor={debtExplainerPrimary}
-                      pointBorderWidth={2}
-                      pointBorderColor={debtExplainerPrimary}
-                      pointLabelYOffset={-12}
-                      colors={debtExplainerPrimary}
-                      useMesh={false}
-                      enableGridY={false}
-                      enableGridX={false}
-                      sliceTooltip={() => <></>}
-                      enableCrosshair={false}
-                      animate={true}
-                      isInteractive={true}
-                      onMouseLeave={lineChartOnMouseLeave}
-                    />
-                  </div>
-                <div className={footerContainer}>
-                  <p>
-                    {" "}
-                    Visit the {historicalDebtOutstanding} dataset
-                    to explore and download this data. The GDP data is sourced
-                    from the {beaLink}.
-                  </p>
-                  <p>Last Updated: September 30, {lastDebtValue.x}</p>
-                </div>
-              </div>
-            </div>
-            <VisualizationCallout color={debtExplainerPrimary}>
-              <p>
-                When adjusted for inflation, the U.S. federal debt has
-                steadily increased since 2001. Without adjusting for
-                inflation, the U.S. federal debt has steadily increased since
-                1957. Another way to view the federal debt over time is to
-                look at the ratio of federal debt related to GDP. This ratio
-                has generally increased since 1981.
-              </p>
-            </VisualizationCallout>
-          </>
-        )}
-      </div>
-    );
+  const handleMouseLeaveLineChart = () => {
+    clearTimeout(gaTimerDebtTrends);
+    clearTimeout(ga4Timer);
   };
+
+  const lineChartOnMouseLeave = () => {
+    setLineChartHoveredValue(formatPercentage(lastDebtValue.y));
+    setLineChartHoveredYear(lastDebtValue.x);
+  };
+
+  const headerContent = () => (
+    <div className={headerContainer}>
+      <div>
+        <div className={header}>
+          {lineChartHoveredYear === ""
+            ? lastDebtValue.x
+            : lineChartHoveredYear}
+        </div>
+        <span className={subHeader}>Fiscal Year</span>
+      </div>
+      <div>
+        <div className={header}>
+          {lineChartHoveredValue === ""
+            ? lastDebtValue.y + "%"
+            : lineChartHoveredValue}
+        </div>
+        <span className={subHeader}>Debt to GDP</span>
+      </div>
+    </div>
+  );
+
+  const footerContent = (
+    <p>
+      Visit the {historicalDebtOutstanding} dataset
+      to explore and download this data. The GDP data is sourced
+      from the {beaLink}.
+    </p>
+  );
+
+  return (
+    <>
+      {isLoadingDebtTrends && (
+        <div>
+          <FontAwesomeIcon icon={faSpinner} spin pulse /> Loading...
+        </div>
+      )}
+      {dataLoadError && (
+        <div data-testid="error-message">
+          There was a problem loading data for this chart. Please try again later.
+        </div>
+      )}
+      {(!isLoadingDebtTrends && !dataLoadError && debtTrendsData) && (
+        <div className={visWithCallout}>
+          <div className={container}>
+        <ChartContainer
+          title={`Federal Debt Trends Over Time, FY 1948 – ${lastDebtValue.x}`}
+          subTitle={'Debt to Gross Domestic Product (GDP)'}
+          header={headerContent()}
+          footer={footerContent}
+          date={getDateWithoutTimeZoneAdjust(`${lastDebtValue.x}-09-30`)}
+          altText={
+            `Line graph displaying the federal debt to GDP trend over time from ${debtTrendsData[0].data[0].x} to ${lastDebtValue.x}.`
+          }
+          customHeaderStyles={customHeaderStyles}
+          customFooterSpacing={customFooterSpacing}
+        >
+          <div
+            className={`${lineChartContainer} ${!animationComplete ? inAnimation : ''}`}
+            data-testid={`${chartParent}`}
+            onMouseEnter={handleMouseEnterLineChart}
+            onMouseLeave={handleMouseLeaveLineChart}
+            id={'debt-trends'}
+            role={'presentation'}
+          >
+            <Line
+              data={debtTrendsData}
+              width={chartWidth}
+              height={chartHeight}
+              theme={chartBorderTheme}
+              layers={[
+                "grid",
+                "lines",
+                "axes",
+                CustomPoint,
+                (props) =>
+                  CustomSlices({
+                      ...props,
+                    }
+                  ),
+                "crosshair"
+              ]}
+                margin={
+                  width < pxToNumber(breakpointLg)
+                    ? { top: 10, right: 25, bottom: 40, left: 55 }
+                    : { top: 10, right: 25, bottom: 30, left: 50 }
+                }
+              xScale={{
+                type: "linear",
+                min: 1948,
+                max: lastDebtValue.x,
+              }}
+              yScale={{
+                type: "linear",
+                min: 0,
+                max: 140,
+                stacked: true,
+                reverse: false,
+              }}
+              yFormat=" >-.2f"
+              axisTop={null}
+              axisRight={null}
+              axisBottom={{
+                orient: "bottom",
+                tickSize: 6,
+                tickPadding: 8,
+                tickRotation: 0,
+                tickValues: 9,
+              }}
+              axisLeft={{
+                format: formatPercentage,
+                orient: "left",
+                tickSize: 6,
+                tickPadding: 8,
+                tickValues: 8,
+              }}
+              enablePoints={false}
+              enableSlices="x"
+              pointSize={0}
+              pointColor={debtExplainerPrimary}
+              pointBorderWidth={2}
+              pointBorderColor={debtExplainerPrimary}
+              pointLabelYOffset={-12}
+              colors={debtExplainerPrimary}
+              useMesh={false}
+              enableGridY={false}
+              enableGridX={false}
+              sliceTooltip={() => <></>}
+              enableCrosshair={true}
+              crosshairType="x"
+              animate={false}
+              isInteractive={true}
+              onMouseLeave={lineChartOnMouseLeave}
+            />
+          </div>
+        </ChartContainer>
+          </div>
+          <VisualizationCallout color={debtExplainerPrimary}>
+            <p>
+              When adjusted for inflation, the U.S. federal debt has
+              steadily increased since 2001. Without adjusting for
+              inflation, the U.S. federal debt has steadily increased since
+              1957. Another way to view the federal debt over time is to
+              look at the ratio of federal debt related to GDP. This ratio
+              has generally increased since 1981.
+            </p>
+          </VisualizationCallout>
+        </div>
+      )}
+    </>
+  );
+};

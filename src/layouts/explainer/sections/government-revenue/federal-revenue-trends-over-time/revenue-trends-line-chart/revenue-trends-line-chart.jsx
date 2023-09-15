@@ -14,6 +14,14 @@ import {adjustDataForInflation} from "../../../../../../helpers/inflation-adjust
 import {colors, sum} from "./revenue-trends-line-chart-helpers";
 import {getDateWithoutTimeZoneAdjust} from "../../../../../../utils/date-utils";
 import { useTooltip } from '@nivo/tooltip';
+import Analytics from "../../../../../../utils/analytics/analytics";
+import {
+  addInnerChartAriaLabel,
+  applyChartScaling
+} from "../../../../explainer-helpers/explainer-charting-helper";
+
+let gaTimerRevenueTrends;
+let ga4Timer;
 
 const RevenueTrendsLineChart = ({ width, cpiDataByYear }) => {
 
@@ -24,6 +32,16 @@ const RevenueTrendsLineChart = ({ width, cpiDataByYear }) => {
   const [lastUpdatedDate, setLastUpdatedDate] = useState(new Date());
   const [chartYears, setChartYears] = useState([]);
   const [totalRevByYear, setTotalRevByYear] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const chartParent = 'chartParentTrends';
+  const chartWidth = 515;
+  const chartHeight = 500;
+
+  useEffect(() => {
+    applyChartScaling(chartParent, chartWidth.toString(), chartHeight.toString());
+    addInnerChartAriaLabel(chartParent);
+  }, [isLoading]);
 
   useEffect(() => {
     const endPointURL = 'v1/accounting/mts/mts_table_9?filter=record_type_cd:eq:RSG,'
@@ -112,34 +130,48 @@ const RevenueTrendsLineChart = ({ width, cpiDataByYear }) => {
           }
           setTotalRevByYear(sumRevPerYear);
           setChartData(completeData);
+          setIsLoading(false);
         }
       });
-  }, [])
+  }, []);
+
+  const handleChartMouseEnter = () => {
+     gaTimerRevenueTrends = setTimeout(() => {
+       Analytics.event(
+         {
+           category: 'Explainers',
+           action: 'Chart Hover',
+           label: 'Revenue - Federal Revenue Trends Over Time'
+         }
+       );
+     }, 3000);
+    ga4Timer = setTimeout(() => {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        'event': 'chart-hover-federal-rev-trends',
+      });
+    }, 3000);
+  };
+
+  const handleChartMouseLeave = () => {
+    clearTimeout(gaTimerRevenueTrends);
+    clearTimeout(ga4Timer);
+  }
 
   const blsLink =
     <CustomLink
-      url={"https://www.bls.gov/"}
+      url={"https://www.bls.gov/developers/"}
+      eventNumber={'17'}
     >
       Bureau of Labor Statistics
     </CustomLink>;
 
-  const applyChartScaling = () => {
-    // rewrite some element attribs after render to ensure Chart scales with container
-    // which doesn't seem to happen naturally when nivo has a flex container
-    const svgChart = document.querySelector('[data-testid="chartParent"] svg');
-    if (svgChart) {
-      svgChart.setAttribute('viewBox', '0 0 480 500');
-      svgChart.setAttribute('height', '100%');
-      svgChart.setAttribute('width', '100%');
-    }
-  };
-
-  const CustomSlices = props => {
+  const CustomSlices = ({ enableSlices, setCurrentSlice, sliceTooltip, slices }) => {
     const { showTooltipFromEvent, hideTooltip } = useTooltip();
 
     return (
       <g onMouseLeave={() => {hideTooltip()}}>
-        {props.slices.map(slice => (
+        {slices.map(slice => (
           <rect
             x={slice.x0}
             y={slice.y0}
@@ -149,12 +181,12 @@ const RevenueTrendsLineChart = ({ width, cpiDataByYear }) => {
             strokeWidth={0}
             strokeOpacity={0.75}
             fillOpacity={0}
-            onMouseEnter={() => props.setCurrentSlice(slice)}
+            onMouseEnter={() => setCurrentSlice(slice)}
             onFocus={event => {
               showTooltipFromEvent(
-                React.createElement(props.sliceTooltip, {
+                React.createElement(sliceTooltip, {
                   slice,
-                  axis: props.enableSlices,
+                  axis: enableSlices,
                 }),
                 event,
                 'right'
@@ -162,16 +194,16 @@ const RevenueTrendsLineChart = ({ width, cpiDataByYear }) => {
             }}
             onMouseMove={ event => {
               showTooltipFromEvent(
-                React.createElement(props.sliceTooltip, {
+                React.createElement(sliceTooltip, {
                   slice,
-                  axis: props.enableSlices,
+                  axis: enableSlices,
                 }),
                 event,
                 'right'
               )
             }}
             onMouseLeave={() => {
-              props.setCurrentSlice(null)
+              setCurrentSlice(null)
             }}
           />
         ))}
@@ -192,11 +224,12 @@ const RevenueTrendsLineChart = ({ width, cpiDataByYear }) => {
   };
 
   const name = 'Monthly Treasury Statement (MTS)';
-  const slug = `https://fiscaldata.treasury.gov/datasets/monthly-treasury-statement/receipts-of-the-u-s-government`;
+  const slug = `/datasets/monthly-treasury-statement/receipts-of-the-u-s-government`;
+  const mts = <CustomLink url={slug} eventNumber="16" id="Monthly Treasury Statement">{name}</CustomLink>
   const footer =
     <div>
       <p>
-      Visit the <CustomLink url={slug}>{name}</CustomLink> dataset to explore and
+      Visit the {mts} dataset to explore and
       download this data. The inflation data is sourced from the {blsLink}.
       </p>
       <p></p>
@@ -303,13 +336,10 @@ const RevenueTrendsLineChart = ({ width, cpiDataByYear }) => {
            </div>;
   }
 
-  useEffect(() => {
-    applyChartScaling()
-  }, [])
 
   return (
     <>
-      { chartData !== [] ? (
+      { !isLoading ? (
         <div data-testid={'revenueTrendsLineChart'} className={styles.container}>
           <ChartContainer
             title={`Federal Revenue Trends Over Time, FY 2015-${lastChartYear}`}
@@ -321,7 +351,13 @@ const RevenueTrendsLineChart = ({ width, cpiDataByYear }) => {
             customTitleStyles={ width < pxToNumber(breakpointLg) ? {fontSize: fontSize_16, color: '#666666'}: {} }
             customSubTitleStyles={ width < pxToNumber(breakpointLg) ? {fontSize: fontSize_14}: {} }
           >
-            <div className={styles.lineChart} data-testid={'chartParent'}>
+            <div
+              className={styles.lineChart}
+              role={'presentation'}
+              data-testid={'chartParentTrends'}
+              onMouseEnter={handleChartMouseEnter}
+              onMouseLeave={handleChartMouseLeave}
+            >
               <Line
                 data={chartData}
                 layers={[

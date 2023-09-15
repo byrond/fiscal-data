@@ -1,4 +1,4 @@
-import { isBefore, subYears, format } from 'date-fns';
+import { isBefore, subYears, format, addDays } from 'date-fns';
 
 export const convertDate = (date) => {
   // .replace() resolves weird -1 day issue https://stackoverflow.com/a/31732581/564406
@@ -33,7 +33,8 @@ export const getPresetDateRange = (years, latest, earliest) => {
     : '1790/01/01';
   const earliestAsDate = new Date(stringDate);
   earliestAsDate.setHours(0, 0, 0, 0);
-  const yearsPrior = subYears(rangeTo, years);
+  let yearsPrior = subYears(rangeTo, years);
+  yearsPrior = addDays(yearsPrior, 1);
   yearsPrior.setHours(0, 0, 0, 0);
 
   const rangeFrom = isBefore(earliestAsDate, yearsPrior) ? yearsPrior : earliestAsDate;
@@ -75,12 +76,12 @@ export const rewriteUrl = (table, slug, location) => {
 };
 
 export const thinDataAsNeededForChart = (dataRows, slug, dateField, selectedTable) => {
-  if (slug === '/debt-to-the-penny/' || slug === '/qtcb-historical-interest-rates/' &&
-    (!selectedTable || !selectedTable.isLargeDataset)) {
+  if ((slug === '/debt-to-the-penny/') || (slug === '/qtcb-historical-interest-rates/' &&
+    (!selectedTable || !selectedTable.isLargeDataset))) {
     let latestYearMonth = '0';
     const subset = dataRows.slice().reverse().reduce((acc, d) => {
 
-      const yearMonth = d[dateField].substr(0,7);
+      const yearMonth = d[dateField].substring(0,7);
 
       if (latestYearMonth !== yearMonth) {
         latestYearMonth = yearMonth;

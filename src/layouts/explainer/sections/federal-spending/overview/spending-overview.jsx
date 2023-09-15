@@ -3,7 +3,7 @@ import CustomLink from "../../../../../components/links/custom-link/custom-link"
 import {visWithCallout} from "../../../explainer.module.scss";
 import VisualizationCallout
   from "../../../../../components/visualization-callout/visualization-callout";
-import GlossaryTerm from "../../../../../components/glossary-term/glossary-term"
+import GlossaryPopoverDefinition from "../../../../../components/glossary/glossary-term/glossary-popover-definition"
 import {
   spendingExplainerPrimary,
   spendingExplainerSecondary,
@@ -12,15 +12,17 @@ import {
 import QuoteBox from "../../../quote-box/quote-box"
 import { faFlagUsa } from "@fortawesome/free-solid-svg-icons"
 import {apiPrefix, basicFetch} from "../../../../../utils/api-utils";
-import {getShortForm} from "../../../heros/hero-helper";
-export const SpendingOverview = ({ glossary }) => {
+import {getShortForm} from "../../../../../utils/rounding-utils";
+export const SpendingOverview = ({ glossary, glossaryClickHandler }) => {
   const [latestCompleteFiscalYear, setLatestCompleteFiscalYear] = useState(null);
   const [priorYearSpending, setPriorYearSpending] = useState(null);
   const [spendingChange, setSpendingChange] = useState(null);
   const [deficitTerm, setDeficitTerm] = useState(null);
 
   const deficit = (
-    <CustomLink url={"/americas-finance-guide/national-deficit/"}>national deficit</CustomLink>
+    <CustomLink url="/americas-finance-guide/national-deficit/" id="National Deficit">
+      national deficit
+    </CustomLink>
   )
   const usaSpending =
     <CustomLink
@@ -31,52 +33,57 @@ export const SpendingOverview = ({ glossary }) => {
     </CustomLink>;
 
   const objectClass = (
-    <GlossaryTerm
+    <GlossaryPopoverDefinition
       term={"Object Class"}
       page={"Spending explainer"}
       glossary={glossary}
+      glossaryClickHandler={glossaryClickHandler}
     >
       object class
-    </GlossaryTerm>
+    </GlossaryPopoverDefinition>
   )
 
   const budgetFunctions = (
-    <GlossaryTerm
+    <GlossaryPopoverDefinition
       term={"Budget Function"}
       page={"Spending explainer"}
       glossary={glossary}
+      glossaryClickHandler={glossaryClickHandler}
     >
       budget functions
-    </GlossaryTerm>
+    </GlossaryPopoverDefinition>
   )
   const revenue = (
-    <GlossaryTerm
+    <GlossaryPopoverDefinition
       term={"Revenue"}
       page={"Deficit & Spending explainer"}
       glossary={glossary}
+      glossaryClickHandler={glossaryClickHandler}
     >
       revenue
-    </GlossaryTerm>
+    </GlossaryPopoverDefinition>
   )
 
   const agency = (
-    <GlossaryTerm
+    <GlossaryPopoverDefinition
       term={"Agency"}
       page={"Spending explainer"}
       glossary={glossary}
+      glossaryClickHandler={glossaryClickHandler}
     >
       agency
-    </GlossaryTerm>
+    </GlossaryPopoverDefinition>
   )
 
   const federalDebt = (
-    <GlossaryTerm
+    <GlossaryPopoverDefinition
       term={"Federal Debt"}
       page={"Spending Explainer"}
       glossary={glossary}
+      glossaryClickHandler={glossaryClickHandler}
     >
       federal debt
-    </GlossaryTerm>
+    </GlossaryPopoverDefinition>
   )
 
   useEffect(() => {
@@ -92,7 +99,7 @@ export const SpendingOverview = ({ glossary }) => {
         if (res.data) {
           const data = res.data[0];
           setLatestCompleteFiscalYear(data.record_fiscal_year);
-          setPriorYearSpending(getShortForm(data.current_fytd_net_outly_amt.toString(), 2, false));
+          setPriorYearSpending(getShortForm(data.current_fytd_net_outly_amt.toString(), false));
         }
       });
   }, [])

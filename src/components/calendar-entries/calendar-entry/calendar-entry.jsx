@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import * as styles from './calendar-entry.module.scss';
-import { Link, navigate } from 'gatsby';
+import { navigate } from 'gatsby';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendar, faClock } from '@fortawesome/free-solid-svg-icons';
 import CalendarEntryStatus from "../calender-entry-status/calendar-entry-status";
@@ -26,6 +26,12 @@ const CalendarEntry = ({ dataset, earliestDate }) => {
       label
     });
 
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      'event': releaseCalendarDatasetClickEvent.action,
+      'eventLabel': label,
+    });
+
     navigate(`/datasets${url}`);
   }
 
@@ -43,13 +49,9 @@ const CalendarEntry = ({ dataset, earliestDate }) => {
     >
       <div className={styles.titleAndIcon}>
         <CalendarEntryStatus isReleased={released} />
-        <Link
-          to={`/datasets${url}`}
-          className={styles.title}
-          data-testid="title"
-        >
+        <div className={styles.title} data-testid="title">
           {name}
-        </Link>
+        </div>
       </div>
       <div className={styles.date} data-testid="date">
         <FontAwesomeIcon icon={faCalendar} className={styles.dateIcon} />

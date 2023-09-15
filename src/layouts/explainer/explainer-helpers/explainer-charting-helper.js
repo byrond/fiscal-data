@@ -3,7 +3,7 @@ import {breakpointLg} from "../../../variables.module.scss";
 
 
 export const applyChartScaling = (parent, chartWidth, chartHeight) => {
-  // rewrite some element attribs after render to ensure Chart scales with container
+  // this function rewrites some element attribs after render to ensure Chart scales with container
   // which doesn't seem to happen naturally when nivo has a flex container
   const svgChart = document.querySelector(`[data-testid= ${parent}] svg`);
   if (svgChart) {
@@ -12,6 +12,13 @@ export const applyChartScaling = (parent, chartWidth, chartHeight) => {
     svgChart.setAttribute('width', '100%');
   }
 };
+
+export const addInnerChartAriaLabel = ( parent ) => {
+  const svgChart = document.querySelector(`[data-testid= ${parent}] svg`);
+  if (svgChart) {
+    svgChart.setAttribute('aria-label', 'Inner chart area');
+  }
+}
 
 export const applyTextScaling = (parent, chartWidth, pageWidth, fontSize) => {
   const svgChart = document.querySelector(`[data-testid= ${parent}] svg`);

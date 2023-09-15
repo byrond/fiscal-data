@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React from "react"
 import {
   spendingDifferenceContent,
   mandatorySpendingImgStyle,
@@ -11,32 +11,34 @@ import { pxToNumber } from "../../../../../helpers/styles-helper/styles-helper"
 import { breakpointLg } from "../../../../../variables.module.scss"
 import discretionarySpendingDesktop from "../../../../../../static/images/discretionary-spending_desktop.png"
 import discretionarySpendingMobile from "../../../../../../static/images/discretionary-spending_mobile.png"
-import GlossaryTerm from "../../../../../components/glossary-term/glossary-term"
+import GlossaryPopoverDefinition from "../../../../../components/glossary/glossary-term/glossary-popover-definition"
 import CustomLink from "../../../../../components/links/custom-link/custom-link"
 import supplementalSpendingDesktop from "../../../../../../static/images/supplemental-spending_desktop.png"
 import supplementalSpendingMobile from "../../../../../../static/images/supplemental-spending_mobile.png"
 import MandatorySpendingImgDesktop from "../../../../../../static/images/mandatory-spending_desktop.png"
 import MandatorySpendingImgMobile from "../../../../../../static/images/mandatory-spending_mobile.png"
 
-export const SpendingDifference = ({ width, glossary }) => {
+export const SpendingDifference = ({ width, glossary, glossaryClickHandler }) => {
   const appropriations = (
-    <GlossaryTerm
+    <GlossaryPopoverDefinition
       term={"appropriations"}
       page={"Spending Explainer"}
       glossary={glossary}
+      glossaryClickHandler={glossaryClickHandler}
     >
       appropriations
-    </GlossaryTerm>
+    </GlossaryPopoverDefinition>
   )
 
   const supplementalAppropriations = (
-    <GlossaryTerm
-      term={"Supplemental Appropriations"}
+    <GlossaryPopoverDefinition
+      term={"supplemental appropriations"}
       page={"Spending Explainer"}
       glossary={glossary}
+      glossaryClickHandler={glossaryClickHandler}
     >
-      Supplemental Appropriations
-    </GlossaryTerm>
+      supplemental appropriations
+    </GlossaryPopoverDefinition>
   )
   return (
     <div className={spendingDifferenceContent}>
@@ -58,8 +60,11 @@ export const SpendingDifference = ({ width, glossary }) => {
         Mandatory spending, also known as direct spending, is mandated by
         existing laws. This type of spending includes funding for entitlement
         programs like Medicare and Social Security and other payments to people,
-        businesses, and state and local governments. For example, the Social
-        Security Act requires the government to provide payments to
+        businesses, and state and local governments. For example, the {' '}
+          <CustomLink href={"https://www.ssa.gov/OP_Home/ssact/ssact-toc.htm"}>
+            Social Security Act
+          </CustomLink> {' '}
+        requires the government to provide payments to
         beneficiaries based on the amount of money they’ve earned and other
         factors. Last amended in 2019, the Social Security Act will determine
         the level of federal spending into the future until it is amended again.
@@ -119,7 +124,7 @@ export const SpendingDifference = ({ width, glossary }) => {
         appropriations. In 2020, Congress passed four
         supplemental appropriations to aid the nation’s recovery from the
         COVID-19 pandemic. You can explore the spending related to these
-        supplemental appropriation laws in USAspending.gov’s 
+        supplemental appropriation laws in USAspending.gov’s  {' '}
         {
           <CustomLink
             href={"https://www.usaspending.gov/disaster/covid-19?publicLaw=all"}
@@ -150,10 +155,11 @@ export const SpendingDifference = ({ width, glossary }) => {
         <Accordion title="What is the process for determining discretionary spending?"
                     openEventNumber="18"
                    explainerGAEvent="Spending"
+                   ga4ID={"disc-spend"}
         >
-          Discretionary spending is determined by the president and Congress
+          Discretionary spending is determined by the President and Congress
           each year in the budget and appropriations process. First, the
-          president creates a budget proposal and sends it to Congress. Then,
+          President creates a budget proposal and sends it to Congress. Then,
           the House and Senate both draft budget resolutions. Congress can
           change funding levels and add or eliminate programs, taxes, and other
           sources of revenue. Once the budget resolutions have been finalized in
@@ -162,7 +168,7 @@ export const SpendingDifference = ({ width, glossary }) => {
           divided among the twelve Appropriations Subcommittees, which then
           draft bills providing funding levels for the departments, bureaus, and
           agencies within their jurisdiction. After the House and Senate agree
-          to a final funding level for each bill, they are sent to the president
+          to a final funding level for each bill, they are sent to the President
           for approval or veto.
         </Accordion>
       </div>

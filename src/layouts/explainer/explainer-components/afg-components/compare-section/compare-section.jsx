@@ -17,7 +17,7 @@ import {
   faMagnifyingGlassDollar
 } from "@fortawesome/free-solid-svg-icons";
 import { basicFetch } from "../../../../../utils/api-utils"
-import { getShortForm } from "../../../heros/hero-helper"
+import { getShortForm } from "../../../../../utils/rounding-utils"
 import ApiRequest from "../../../../../helpers/api-request"
 import {
   deficitRequest,
@@ -36,11 +36,9 @@ export default function CompareSection({currentFiscalYear}) {
   const priorFiscalYear = (Number(currentFiscalYear) - 1).toString();
   const priorPriorYear = (Number(currentFiscalYear) - 2).toString();
   const priorRevenueRequest = new ApiRequest(revenueRequest).forEndOfFiscalYear(priorFiscalYear);
-  const priorRevenueCategoryRequest = new ApiRequest(revenueCategoryRequest)
-    .forEndOfFiscalYear(priorFiscalYear);
+  const priorRevenueCategoryRequest = new ApiRequest(revenueCategoryRequest).forEndOfFiscalYear(priorFiscalYear);
   const priorSpendingRequest = new ApiRequest(spendingRequest).forEndOfFiscalYear(priorFiscalYear);
-  const priorSpendingCategoryRequest = new ApiRequest(spendingCategoryRequest)
-    .forEndOfFiscalYear(priorFiscalYear);
+  const priorSpendingCategoryRequest = new ApiRequest(spendingCategoryRequest).forEndOfFiscalYear(priorFiscalYear);
   const priorDeficitRequest = new ApiRequest(deficitRequest).forEndOfFiscalYear(priorFiscalYear);
   const priorDebtRequest = new ApiRequest(debtRequest).forEndOfFiscalYear(priorFiscalYear);
   const priorPriorDebtRequest = new ApiRequest(debtRequest).forEndOfFiscalYear(priorPriorYear);
@@ -62,7 +60,7 @@ export default function CompareSection({currentFiscalYear}) {
       .then((res) => {
         if (res.data) {
           const data = res.data[0];
-          setRevenue(getShortForm(data.current_fytd_net_rcpt_amt.toString(), 2, false));
+          setRevenue(getShortForm(data.current_fytd_net_rcpt_amt.toString(), false));
         }
       });
     basicFetch(priorRevenueCategoryRequest.getUrl())
@@ -76,7 +74,7 @@ export default function CompareSection({currentFiscalYear}) {
       .then((res) => {
         if (res.data) {
           const data = res.data[0];
-          setSpending(getShortForm(data.current_fytd_net_outly_amt.toString(), 2, false));
+          setSpending(getShortForm(data.current_fytd_net_outly_amt.toString(), false));
         }
       });
     basicFetch(priorSpendingCategoryRequest.getUrl())
@@ -92,15 +90,11 @@ export default function CompareSection({currentFiscalYear}) {
           const data = res.data[0];
           const deficitAmount = Number(data.current_fytd_net_outly_amt);
           const priorDeficitAmount = Number(data.prior_fytd_net_outly_amt);
-          const formattedAmount = Math.abs(deficitAmount) >= 1000000000000 ?
-            getShortForm(Math.abs(deficitAmount).toString(), 2, false) :
-            getShortForm(Math.abs(deficitAmount).toString(), 0, false);
+          const formattedAmount = getShortForm(Math.abs(deficitAmount).toString(), false);
           setDeficit(formattedAmount);
           const difference = deficitAmount - priorDeficitAmount;
           setDeficitDirection(difference < 0 ? 'increased' : 'decreased');
-          const formattedChange = Math.abs(difference) >= 1000000000000 ?
-            getShortForm(Math.abs(difference).toString(), 2, false) :
-            getShortForm(Math.abs(difference).toString(), 0, false);
+          const formattedChange = getShortForm(Math.abs(difference).toString(), false);
           setDeficitChange(formattedChange);
         }
       });
@@ -108,7 +102,7 @@ export default function CompareSection({currentFiscalYear}) {
       .then((res) => {
         if (res.data) {
           const data = res.data[0];
-          setDebt(getShortForm(data.tot_pub_debt_out_amt.toString(), 2, false));
+          setDebt(getShortForm(data.tot_pub_debt_out_amt.toString(), false));
           basicFetch(priorPriorDebtRequest.getUrl())
             .then((priorRes) => {
               if (priorRes.data) {
@@ -118,7 +112,7 @@ export default function CompareSection({currentFiscalYear}) {
                   Number(priorData.tot_pub_debt_out_amt);
 
                 setDebtDirection(difference > 0 ? 'increased' : 'decreased');
-                setDebtChange(getShortForm(Math.abs(difference).toString(), 2, false));
+                setDebtChange(getShortForm(Math.abs(difference).toString(), false));
               }
             })
         }
@@ -130,6 +124,8 @@ export default function CompareSection({currentFiscalYear}) {
     const anchor = getAFGFootnotes(FY+1)[idx]
     return <AnchorText link={anchor.anchors[anchorIdx].link} text={anchor.anchors[anchorIdx].text} />
   }
+
+  //TODO: Make fontStyle a variable and reuse over hardcoded string
 
   const subSections = [{
         heading:
@@ -163,7 +159,7 @@ export default function CompareSection({currentFiscalYear}) {
           </>,
         faIcon: faHandHoldingDollar ,
         mainColor: spendingExplainerPrimary,
-      altText: 'An outstretched open hand beneath a $ sign.'
+        altText: 'An outstretched open hand beneath a $ sign.'
     },
     {
         heading:
@@ -202,7 +198,7 @@ export default function CompareSection({currentFiscalYear}) {
           </>,
         faIcon: faMagnifyingGlassDollar ,
         mainColor: debtExplainerPrimary,
-      altText: 'A magnifying glass with a $ in the center.'
+        altText: 'A magnifying glass with a $ in the center.'
     }]
 
     return (
@@ -219,13 +215,13 @@ export default function CompareSection({currentFiscalYear}) {
                       key={s.mainColor}
                       classes={{ root: styles.compareGridItem }}
                     >
-                        <Grid item xs={2} classes={{ root: styles.compareIcon }}>
-                            <AfgIcon faIcon={s.faIcon} iconColor={s.mainColor} altText={s.altText} />
-                        </Grid>
-                        <Grid item xs={10} classes={{ root: styles.compareText }}>
-                            <h5 className={styles.subHeading}>{s.heading}</h5>
-                            <div className={styles.body}>{s.body}</div>
-                        </Grid>
+                      <Grid item xs={2} classes={{ root: styles.compareIcon }}>
+                          <AfgIcon faIcon={s.faIcon} iconColor={s.mainColor} altText={s.altText} />
+                      </Grid>
+                      <Grid item xs={10} classes={{ root: styles.compareText }}>
+                          <h5 className={styles.subHeading}>{s.heading}</h5>
+                          <div className={styles.body}>{s.body}</div>
+                      </Grid>
                     </Grid>
                 ))}
             </Grid>

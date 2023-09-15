@@ -4,6 +4,7 @@ import FederalRevenueTrendsOverTime from "./federal-revenue-trends-over-time";
 import fetchMock from "fetch-mock";
 
 describe("revenue trends over time section", () => {
+
   const mockCpiDataset = {
     "2011": "10",
     "2012": "5",
@@ -259,9 +260,11 @@ describe("revenue trends over time section", () => {
   });
 
   it("renders the revenue trends line chart", async () => {
+    const fetchSpy = jest.spyOn(global, "fetch");
     const { getByTestId } = render(
       <FederalRevenueTrendsOverTime cpiDataByYear={mockCpiDataset} />
     );
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
     expect(await getByTestId("revenueTrendsLineChart")).toBeInTheDocument();
   });
 

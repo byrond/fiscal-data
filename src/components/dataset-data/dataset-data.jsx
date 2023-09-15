@@ -52,6 +52,8 @@ export const DatasetDataComponent = ({
   const [perPage, setPerPage] = useState(null);
   const [ignorePivots, setIgnorePivots] = useState(false);
   const [configUpdated, setConfigUpdated] = useState(false);
+  const [userFilterSelection, setUserFilterSelection] = useState(null);
+  const [tableColumnSortData, setTableColumnSortData] = useState([]);
   const [tableCaches] = useState({});
 
   let loadByPage;
@@ -188,44 +190,55 @@ export const DatasetDataComponent = ({
     <DatasetSectionContainer id="preview-and-download" title={title}>
       <ReportDataToggle onChange={setActiveTab} reports={publishedReports} />
       <div className={activeTab === 1 ? '' : 'hidden'}>
-        <FilterAndDownload
-          data-testid="filterAndDownload"
-          dateRange={dateRange}
-          isFiltered={isFiltered}
-          selectedTable={selectedTable}
-          dataset={config}
-          allTablesSelected={allTablesSelected}
-          isCustomDateRange={isCustomDateRange}
-        >
-          <DataTableSelect
-            apis={apis}
+        {
+          tableColumnSortData &&
+          <FilterAndDownload
+            data-testid="filterAndDownload"
+            dateRange={dateRange}
+            isFiltered={isFiltered}
             selectedTable={selectedTable}
-            setSelectedTable={handleSelectedTableChange}
+            dataset={config}
             allTablesSelected={allTablesSelected}
-            earliestDate={config.techSpecs.earliestDate}
-            latestDate={config.techSpecs.latestDate}
-          />
-          {selectedTable &&
-          <RangePresets
-            setDateRange={handleDateRangeChange}
-            selectedTable={selectedTable}
-            setIsFiltered={setIsFiltered}
-            currentDateButton={config.currentDateButton}
-            setIsCustomDateRange={setIsCustomDateRange}
-            allTablesSelected={allTablesSelected}
-            datasetDateRange={{
-              earliestDate: config.techSpecs.earliestDate,
-              latestDate: config.techSpecs.latestDate}
+            isCustomDateRange={isCustomDateRange}
+            selectedUserFilter={userFilterSelection}
+            tableColumnSortData={tableColumnSortData}
+          >
+            <DataTableSelect
+              apis={apis}
+              selectedTable={selectedTable}
+              setSelectedTable={handleSelectedTableChange}
+              allTablesSelected={allTablesSelected}
+              earliestDate={config.techSpecs.earliestDate}
+              latestDate={config.techSpecs.latestDate}
+            />
+            {selectedTable &&
+            <RangePresets
+              setDateRange={handleDateRangeChange}
+              selectedTable={selectedTable}
+              apiData={apiData}
+              onUserFilter={setUserFilterSelection}
+              setIsFiltered={setIsFiltered}
+              currentDateButton={config.currentDateButton}
+              datePreset={config.datePreset}
+              customRangePreset={config.customRangePreset}
+              setIsCustomDateRange={setIsCustomDateRange}
+              allTablesSelected={allTablesSelected}
+              datasetDateRange={{
+                earliestDate: config.techSpecs.earliestDate,
+                latestDate: config.techSpecs.latestDate
+              }
+              }
+              finalDatesNotFound={finalDatesNotFound}
+            />
             }
-            finalDatesNotFound={finalDatesNotFound}
-          />
-          }
-        </FilterAndDownload>
+          </FilterAndDownload>
+        }
         {dateRange &&
         <TableSectionContainer
           config={config}
           dateRange={dateRange}
           selectedTable={selectedTable}
+          userFilterSelection={userFilterSelection}
           apiData={apiData}
           isLoading={isLoading}
           apiError={apiError}
@@ -239,6 +252,9 @@ export const DatasetDataComponent = ({
           handleIgnorePivots={setIgnorePivots}
           allTablesSelected={allTablesSelected}
           handleConfigUpdate={() => setConfigUpdated(true)}
+          setTableColumnSortData={setTableColumnSortData}
+          hasPublishedReports={!!publishedReports}
+          publishedReports={publishedReports}
         />
         }
       </div>

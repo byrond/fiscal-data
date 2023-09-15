@@ -12,21 +12,13 @@ import Methods from "../../components/api-documentation/methods/methods";
 import Parameters from "../../components/api-documentation/parameters/parameters";
 import Responses from "../../components/api-documentation/responses/responses";
 import Aggregation from '../../components/api-documentation/aggregation/aggregation';
-import Pivoting from '../../components/api-documentation/pivoting/pivoting';
-import MultiDimensionDatasets from '../../components/api-documentation/multi-dimension-datasets/multi-dimension-datasets';
 import Examples from '../../components/api-documentation/examples/examples';
 import TOCButton from "../../components/table-of-contents/toc-button/toc-button";
 import * as tocStyles from '../../components/table-of-contents/toc.module.scss';
 import * as styles from './api.module.scss';
 import DataRegistry from "../../components/api-documentation/data-registry/data-registry";
 import {updateAddressPath} from "../../helpers/address-bar/address-bar";
-
-export const scrollOptions = {
-  smooth: true,
-  spy: true,
-  duration: 0,
-  delay: 0
-};
+import {scrollOptionsSmooth} from "../../utils/scroll-config";
 
 const ApiDocumentationPage = ({location}) => {
 
@@ -172,16 +164,6 @@ const ApiDocumentationPage = ({location}) => {
       title: 'Aggregation & Sums'
     },
     {
-      id: 'pivoting',
-      headingLevel: styles.headingLevel2,
-      title: 'Pivoting'
-    },
-    {
-      id: 'multidimension-datasets',
-      headingLevel: styles.headingLevel2,
-      title: 'Multi-Dimension Datasets'
-    },
-    {
       id: 'examples-code-snippets',
       headingLevel: styles.headingLevel2,
       title: 'Examples and Code Snippets'
@@ -288,10 +270,10 @@ const ApiDocumentationPage = ({location}) => {
     }
     else {
       if (!tocIsOpen) {
-        Scroll.animateScroll.scrollToTop(scrollOptions);
+        Scroll.animateScroll.scrollToTop(scrollOptionsSmooth);
       }
       else {
-        Scroll.animateScroll.scrollTo(lastScrollPosition,scrollOptions);
+        Scroll.animateScroll.scrollTo(lastScrollPosition, scrollOptionsSmooth);
       }
     }
     setLastScrollPosition(scrollPosition);
@@ -348,8 +330,6 @@ const ApiDocumentationPage = ({location}) => {
           <Parameters/>
           <Responses/>
           <Aggregation/>
-          <Pivoting/>
-          <MultiDimensionDatasets/>
           <Examples/>
         </div>
         <TOCButton handleToggle={handleToggle} state={tocIsOpen}/>

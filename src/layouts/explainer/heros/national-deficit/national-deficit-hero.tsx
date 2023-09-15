@@ -1,97 +1,74 @@
-import React, {useEffect, useLayoutEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import CustomLink from "../../../../components/links/custom-link/custom-link";
 import {
   counterSourceInfo,
   footNotes,
-  deficitBox,
-  deficitBoxPercent,
   deficitBoxContainer,
-  explainerArrow,
   heroImageSubHeading,
   deficit
 } from "../../hero-image/hero-image.module.scss"
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import { faDownLong, faUpLong} from "@fortawesome/free-solid-svg-icons";
 import {apiPrefix, basicFetch} from "../../../../utils/api-utils";
-import {numberWithCommas} from "../../../../helpers/simplify-number/simplifyNumber";
-import {pxToNumber} from "../../../../helpers/styles-helper/styles-helper";
-import {breakpointLg} from "../../../../variables.module.scss";
 import SplitFlapDisplay from "../../../../components/split-flap-display/split-flap-display"
-import GlossaryTerm from "../../../../components/glossary-term/glossary-term";
-import {getShortForm} from "../hero-helper";
+import GlossaryPopoverDefinition from "../../../../components/glossary/glossary-term/glossary-popover-definition";
+import {getFootNotesDateRange, getPillData} from "../hero-helper";
+import { getShortForm } from "../../../../utils/rounding-utils";
 
-const NationalDeficitHero = ({glossary}): JSX.Element => {
+const NationalDeficitHero = ({glossary, glossaryClickHandler}): JSX.Element => {
   const fields: string = 'fields=current_fytd_net_outly_amt,prior_fytd_net_outly_amt,record_date,' +
     'record_calendar_month,record_calendar_year,record_fiscal_year';
   const sort: string = 'sort=-record_date';
   const filter: string = 'filter=line_code_nbr:eq:5694'
   const pagination: string = 'page[size]=13';
-  const endpointUrl: string
-    = `v1/accounting/mts/mts_table_5?${fields}&${filter}&${sort}&${pagination}`;
+  const endpointUrl: string = `v1/accounting/mts/mts_table_5?${fields}&${filter}&${sort}&${pagination}`;
   const deficitUrl: string = `${apiPrefix}${endpointUrl}`;
 
-  const [displayedPriorDeficitValue, setDisplayedPriorDeficitValue] =
-    useState<string | null>(null);
+  const deficitPillColor = '#b3532d1a';
+
+  const rightPillTooltipHoverText = 'The percentage change in the deficit compared to the same period last year.';
+
 
   const [textCurrentDeficit, setTextCurrentDeficit] = useState<string | null>(null);
   const [desktopDeficit, setDesktopDeficit] = useState<string | null>(null);
   const [desktopPriorDeficit, setDesktopPriorDeficit] = useState<string | null>(null);
-  const [mobilePriorDeficit, setMobilePriorDeficit] = useState<string | null>(null);
   const [currentRecordMonth, setCurrentRecordMonth] = useState<string>('');
   const [previousCalendarYear, setPreviousCalendarYear] = useState<string>('');
   const [previousFiscalYear, setPreviousFiscalYear] = useState<string>('');
   const [currentFiscalYear, setCurrentFiscalYear] = useState<string>('')
-
-  // calendar year in which prior fiscal year began (PreviousFiscalYear - 1);
-  const [previousFiscalStartYear, setPreviousFiscalStartYear] = useState<string>('');
-
   const [deficitStatus, setDeficitStatus] = useState<string>('');
   const [deficitDif, setDeficitDif] = useState<string>('');
-  const [deficitDifPill, setDeficitDifPill] = useState<string>('');
-  const [deficitDifPercent, setDeficitDifPercent] = useState<string>('');
+  const [deficitDifPill, setDeficitDifPill] = useState<number>(0);
+  const [deficitDifPercent, setDeficitDifPercent] = useState<number>(0);
+
+  const numberFormat = new Intl.NumberFormat('en-US');
 
 
   const getCurrentNationalDeficitData = (url) => {
     basicFetch(`${url}`)
     .then((res) => {
       if (res.data) {
-
-
         // create local variable to immediately find last complete year record
-        const lastFiscalYear = (parseInt(res.data[0].record_fiscal_year) - 1).toString();
+        const lastFiscalYear = (Number(res.data[0].record_fiscal_year) - 1).toString();
         setCurrentFiscalYear(res.data[0].record_fiscal_year);
 
         setPreviousFiscalYear(lastFiscalYear);
-        setPreviousFiscalStartYear((Number(lastFiscalYear) - 1).toString())
 
         setTextCurrentDeficit(
-          getShortForm(res.data[0].current_fytd_net_outly_amt, 2,  false, true)
+          getShortForm(res.data[0].current_fytd_net_outly_amt, false)
         )
 
         setPreviousCalendarYear((parseInt(res.data[0].record_calendar_year) - 1).toString());
 
         setDesktopDeficit(Math.abs(parseFloat(res.data[0].current_fytd_net_outly_amt)).toFixed());
-        setMobilePriorDeficit(getShortForm(res.data[0].prior_fytd_net_outly_amt, 0));
-        if (Math.abs(parseFloat(res.data[0].prior_fytd_net_outly_amt)) < 1000000000000) {
-          setDesktopPriorDeficit(getShortForm(
-            Math.abs(parseFloat(res.data[0].prior_fytd_net_outly_amt)).toFixed(), 0, false));
-        }
-        else if (Math.abs(parseFloat(res.data[0].prior_fytd_net_outly_amt)) >= 1000000000000) {
-          setDesktopPriorDeficit(getShortForm(
-            Math.abs(parseFloat(res.data[0].prior_fytd_net_outly_amt)).toFixed(), 2, false));
-        }
+        setDesktopPriorDeficit(getShortForm(Math.abs(parseFloat(res.data[0].prior_fytd_net_outly_amt)).toFixed(), false));
         const date = new Date();
         date.setDate(15);
         date.setMonth(parseInt(res.data[0].record_calendar_month) - 1);
-        setCurrentRecordMonth(date.toLocaleString('en-US', {
-          month: 'short',
-        }));
+        setCurrentRecordMonth(res.data[0].record_calendar_month);
         const currentDeficit = Math.abs(parseFloat(res.data[0].current_fytd_net_outly_amt));
         const priorYearDeficit = Math.abs(parseFloat(res.data[0].prior_fytd_net_outly_amt));
-        setDeficitDif(getShortForm(Math.abs(priorYearDeficit - currentDeficit).toString(), 0, false));
-        setDeficitDifPill(getShortForm(Math.abs(priorYearDeficit - currentDeficit).toString(), 0, true))
-        setDeficitDifPercent((
-          ((currentDeficit - priorYearDeficit) / priorYearDeficit)*100).toFixed())
+        setDeficitDif(getShortForm(Math.abs(priorYearDeficit - currentDeficit).toString(), false));
+        setDeficitDifPill(Math.abs(priorYearDeficit - currentDeficit));
+        setDeficitDifPercent(parseFloat((((currentDeficit - priorYearDeficit) / priorYearDeficit)*100).toFixed()))
         if(currentDeficit > priorYearDeficit) {
           setDeficitStatus('increased');
         }
@@ -102,32 +79,9 @@ const NationalDeficitHero = ({glossary}): JSX.Element => {
     });
   };
 
-  const formatDeficit = () => {
-    if (typeof (window) !== 'undefined') {
-      setDisplayedPriorDeficitValue(mobilePriorDeficit);
-    }
-  }
-
-  const useWindowSize = () => {
-    const [size, setSize] = useState([0, 0]);
-    useLayoutEffect(() => {
-      const updateSize = () => {
-        setSize([window.innerWidth, window.innerHeight]);
-      }
-      window.addEventListener('resize', updateSize);
-      updateSize();
-      return () => window.removeEventListener('resize', updateSize);
-    }, []);
-    return size;
-  }
-
   useEffect(() => {
     getCurrentNationalDeficitData(deficitUrl);
   }, []);
-
-  useEffect(() => {
-    formatDeficit();
-  }, [useWindowSize(), []])
 
   const mtsLink = (
     <CustomLink
@@ -136,19 +90,25 @@ const NationalDeficitHero = ({glossary}): JSX.Element => {
         "-of-the-u-s-government"
       }
       eventNumber="2"
+      id="Monthly Treasury Statement"
     >
       Monthly Treasury Statement (MTS)
     </CustomLink>
   );
 
   const fiscalYear =
-    <GlossaryTerm term={'fiscal year'} page={'Deficit Explainer'} glossary={glossary} >
+    <GlossaryPopoverDefinition
+      term={'fiscal year'}
+      page={'Deficit Explainer'}
+      glossary={glossary}
+      glossaryClickHandler={glossaryClickHandler}
+    >
       fiscal year (FY)
-    </GlossaryTerm>
+    </GlossaryPopoverDefinition>
 
-  const changeNationaDeficitFooter =
+  const changeNationalDeficitFooter =
     <p>Compared to the national deficit of ${desktopPriorDeficit} for the same period last year
-      (Oct {previousFiscalStartYear} - {currentRecordMonth} {previousCalendarYear}),
+      ({getFootNotesDateRange(previousFiscalYear, previousCalendarYear, currentRecordMonth)}),
       our national deficit has {deficitStatus} by ${deficitDif}.
     </p>
 
@@ -162,7 +122,7 @@ const NationalDeficitHero = ({glossary}): JSX.Element => {
       <div>
         <SplitFlapDisplay value={desktopDeficit}
                           mobilePrecision={parseInt(desktopDeficit) > 999999999999 ? 2 : 0}
-                          minLength={desktopDeficit?.toString().length} // number of characters to initially display
+                          minLength={numberFormat.format(parseInt(desktopDeficit)).length} // number of characters to initially display
                           valueType="currency"
         />
       </div>
@@ -173,27 +133,14 @@ const NationalDeficitHero = ({glossary}): JSX.Element => {
         </p>
       </div>
       <div className={footNotes}>
-        {changeNationaDeficitFooter}
+        {changeNationalDeficitFooter}
       </div>
       <div className={deficitBoxContainer}>
-        <div className={deficitBox}>
-          ${deficitDifPill}
-        </div>
-          {
-            deficitStatus === 'increased' ? (
-              <div className={explainerArrow}>
-                <FontAwesomeIcon icon={faUpLong} title={"up arrow"} />
-              </div>
-            )
-            : (
-              <div className={explainerArrow}>
-                <FontAwesomeIcon icon={faDownLong} title={"down arrow"} />
-              </div>
-            )
-          }
-        <div className={deficitBoxPercent}>
-          {deficitDifPercent}%
-        </div>
+        {
+          getPillData(deficitDifPill, deficitDifPercent, deficitStatus, true, deficitPillColor,
+          `The total amount the deficit has ${deficitStatus} compared to the same period last year.`,
+            rightPillTooltipHoverText)
+        }
       </div>
     </>
   )

@@ -30,13 +30,6 @@ import {
 } from './about-us.module.scss';
 const tocSections = ['about-section','faq','contact-section'];
 
-export const scrollOptions = {
-  smooth: true,
-  spy: true,
-  duration: 0,
-  delay: 0
-};
-
 const AboutUsPage: FunctionComponent = ({data}) => {
   const breadCrumbLinks = [
     {
@@ -112,7 +105,7 @@ const AboutUsPage: FunctionComponent = ({data}) => {
             >
               <About />
               <FAQ triggerHighlight={highlight} />
-              <Contact onUnsupportedSubject={() => doHighlight(prevState => prevState + 1)} />
+              <Contact />
             </div>
           </SecondaryNav>
         </Experimental>

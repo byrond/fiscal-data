@@ -20,14 +20,15 @@ const ChartContainer = ({
   customContainerStyles,
   customHeaderStyles,
   customSpacing,
-  customFooterSpacing,
+  customFooterStyles,
   customTitleStyles,
-  customSubTitleStyles
+  customSubTitleStyles,
+  customTestId
 }) => {
   return (
     <div
       className={`${chartContainer}`}
-      role={"img"}
+      role={"figure"}
       aria-label={altText}
       style={{ ...customSpacing }}
     >
@@ -39,13 +40,13 @@ const ChartContainer = ({
         {header}
       </div>
       <div
-        data-testid="chart"
+        data-testid={customTestId ? customTestId : 'chart'}
         className={`${chart} chartContainerChart`}
         style={{ ...customContainerStyles }}
       >
         {children}
       </div>
-      <div className={`${footerContainer} chartContainerFooter`} style={{ ...customFooterSpacing }}>
+      <div className={`${footerContainer} chartContainerFooter`} style={{ ...customFooterStyles }}>
         {footer}
         Last Updated: {format(date, "MMMM d, yyyy")}
       </div>

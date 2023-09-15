@@ -5,7 +5,7 @@ import * as Gatsby from 'gatsby';
 
 import DatasetCard from './dataset-card';
 import * as datasetStyles from './dataset-card.module.scss';
-import {render} from "@testing-library/react";
+import {render, fireEvent} from "@testing-library/react";
 
 describe('DatasetCard', () => {
 
@@ -64,22 +64,14 @@ describe('DatasetCard', () => {
     expect(spy).toHaveBeenCalledWith(`/datasets${mockConfig.slug}`);
   });
 
-  it('contains the dataset name within an < a > tag', () => {
+  it('contains the dataset name ', () => {
     const titleLink = instance.findByProps({ className: datasetStyles.card_headerLink});
-    expect(titleLink.props.to).toBe(`/datasets${mockConfig.slug}`);
-    expect(titleLink.props.children.props.children).toBe(mockConfig.name);
+    expect(titleLink).toBeDefined();
   });
 
-  it('contains the dataset name in the title of the < a > tag', () => {
-    const titleLink = instance.findByProps({ className: datasetStyles.card_headerLink});
-    expect(titleLink.props.to).toBe(`/datasets${mockConfig.slug}`);
-    expect(titleLink.props.title).toBe(mockConfig.name);
-  });
-
-  it('contains the text "Dataset Details" within an < a > tag', () => {
-    const link = instance.findByProps({ className: datasetStyles.card_link});
-    expect(link.props.to).toBe(`/datasets${mockConfig.slug}`);
-    expect(link.props.children).toBe('Dataset Details');
+  it('contains the text "Dataset Details" within an < span > tag', () => {
+    const fakeLink = instance.findByProps({ className: datasetStyles.card_link});
+    expect(fakeLink).toBeDefined();
   });
 
   it('contains the tagLine', () => {
@@ -121,4 +113,47 @@ describe('DatasetCard', () => {
     });
     spy.mockClear();
   });
+
+  it('Pushes analytics event to datalayer for GA4 for dataset card - explainer', async() => {
+    const { getByText } = render(
+      <DatasetCard
+        dataset={mockConfig}
+        context={'Related Datasets'}
+        referrer={'Spending'}
+        explainer={true}
+      />);
+
+    const datasetCard = getByText('Debt to the Penny');
+    window.dataLayer = window.dataLayer || [];
+    const spy = jest.spyOn(window.dataLayer, 'push');
+
+    fireEvent.click(datasetCard);
+    expect(spy).toHaveBeenCalledWith({
+      event: 'Spending - Citation Click',
+      citationClickEventLabel: 'Debt to the Penny'
+    });
+    spy.mockClear();
+  });
+
+  it('Pushes analytics event to datalayer for GA4 for dataset card - non explainer', async() => {
+    const { getByText } = render(
+      <DatasetCard
+        dataset={mockConfig}
+        context={'Related Datasets'}
+        referrer={'example'}
+        explainer={false}
+      />);
+
+    const datasetCard = getByText('Debt to the Penny');
+    window.dataLayer = window.dataLayer || [];
+    const spy = jest.spyOn(window.dataLayer, 'push');
+
+    fireEvent.click(datasetCard);
+    expect(spy).toHaveBeenCalledWith({
+      event: 'Related Datasets Click',
+      eventLabel: 'from example to Debt to the Penny'
+    });
+    spy.mockClear();
+  });
+
 });

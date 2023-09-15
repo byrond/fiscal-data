@@ -1,24 +1,26 @@
-import React from "react";
-import CustomLink from "../../../../../../components/links/custom-link/custom-link";
-import * as styles from "./total-spending-chart.module.scss";
+import React from 'react';
+import CustomLink from '../../../../../../components/links/custom-link/custom-link';
+import * as styles from './total-spending-chart.module.scss';
 import {
   breakpointLg,
   fontSize_10,
   fontSize_14,
   semiBoldWeight,
-} from "../../../../../../variables.module.scss";
-import { pxToNumber } from "../../../../../../helpers/styles-helper/styles-helper";
+} from '../../../../../../variables.module.scss';
+import { pxToNumber } from '../../../../../../helpers/styles-helper/styles-helper';
 
-const mts = <CustomLink url={`/datasets/monthly-treasury-statement/receipts-of-the-u-s-government/`}
+
+const mts = <CustomLink url="/datasets/monthly-treasury-statement/receipts-of-the-u-s-government/"
                         eventNumber="21"
+                        id="Monthly Treasury Statement"
             >
               Monthly Treasury Statement (MTS)
             </CustomLink>;
-const bea = <CustomLink url={'https://www.bea.gov/'} eventNumber="34">
+const bea = <CustomLink url="https://www.bea.gov/" eventNumber="34">
               Bureau of Economic Analysis
             </CustomLink>;
 
-const bls = <CustomLink url={'https://www.bls.gov/developers/'}>  Bureau of Labor Statistics</CustomLink>
+const bls = <CustomLink url="https://www.bls.gov/developers/">Bureau of Labor Statistics</CustomLink>
 
 const footer = (
   <p>
@@ -29,28 +31,26 @@ const footer = (
   </p>
 );
 
-
-
 export const getChartCopy = (minYear, maxYear, selectedChartView) => {
   return {
   title: `Government Spending and the U.S. Economy (GDP), FY ${minYear} – ${maxYear}`,
   subtitle: `Inflation Adjusted - ${maxYear} Dollars`,
   footer: footer,
-  altText: (selectedChartView === "percentageGdp" ? "A line graph showing the percentage of GDP." :
-    "Line graph comparing the total federal spending to the total GDP dollar amount."),
+  altText: (selectedChartView === "percentageGdp" ? 'A line graph showing the percentage of GDP.' :
+    'Line graph comparing the total federal spending to the total GDP dollar amount.'),
   }
 };
 
 const getFirstElPadding = (chartView, isMobile) => {
-  if (chartView === "percentageGdp") {
-    return "112px";
+  if (chartView === 'percentageGdp') {
+    return '112px';
   }
-  if (chartView === "totalSpending") {
+  if (chartView === 'totalSpending') {
     if (isMobile) {
-      return "52px";
+      return '52px';
     }
   }
-  return "32px";
+  return '32px';
 };
 
 export const dataHeader = (chartToggleConfig, headingValues, gaEvent) => {
@@ -66,9 +66,9 @@ export const dataHeader = (chartToggleConfig, headingValues, gaEvent) => {
   return (
     <div
       style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
       }}
     >
       <div
@@ -80,27 +80,28 @@ export const dataHeader = (chartToggleConfig, headingValues, gaEvent) => {
         <button
           className={styles.toggleButton}
           style={{
-            borderBottomLeftRadius: "4px",
-            borderTopLeftRadius: "4px",
+            borderBottomLeftRadius: '4px',
+            borderTopLeftRadius: '4px',
             color:
-              selectedChartView === "totalSpending" ? "#f1f1f1" : "#00766C",
+              selectedChartView === 'totalSpending' ? '#f1f1f1' : '#00766C',
             background:
-              selectedChartView === "totalSpending" ? "#00766C" : "#f1f1f1",
-            borderRight: "none",
-            width: isMobile ? "144px" : "224px",
-            height: isMobile ? "1.5rem" : "2rem",
+              selectedChartView === 'totalSpending' ? '#00766C' : '#f1f1f1',
+            borderRight: 'none',
+            width: isMobile ? '144px' : '224px',
+            height: isMobile ? '1.5rem' : '2rem',
           }}
           onClick={() => {
-            setSelectedChartView("totalSpending");
-            gaEvent("19");
+            setSelectedChartView('totalSpending');
+            gaEvent('19');
           }}
+          id={'total-spending-toggle'}
         >
           <span
             style={{
-              fontSize: isMobile ? "14px" : "16px",
+              fontSize: isMobile ? '14px' : '16px',
               color:
-                selectedChartView === "percentageGdp" ? "inherit" : "#FFFFFF",
-              fontWeight: "600",
+                selectedChartView === 'percentageGdp' ? 'inherit' : '#FFFFFF',
+              fontWeight: 600,
             }}
           >
             Total Spending
@@ -109,32 +110,33 @@ export const dataHeader = (chartToggleConfig, headingValues, gaEvent) => {
         <button
           className={styles.toggleButton}
           style={{
-            borderBottomRightRadius: "4px",
-            borderTopRightRadius: "4px",
+            borderBottomRightRadius: '4px',
+            borderTopRightRadius: '4px',
             color:
-              selectedChartView === "percentageGdp" ? "#f1f1f1" : "#00766C",
+              selectedChartView === 'percentageGdp' ? '#f1f1f1' : '#00766C',
             background:
-              selectedChartView === "percentageGdp" ? "#00766C" : "#f1f1f1",
-            width: isMobile ? "144px" : "224px",
-            height: isMobile ? "1.5rem" : "2rem",
+              selectedChartView === 'percentageGdp' ? '#00766C' : '#f1f1f1',
+            width: isMobile ? '144px' : '224px',
+            height: isMobile ? '1.5rem' : '2rem',
           }}
           onClick={() => {
-            setSelectedChartView("percentageGdp");
-            gaEvent("19");
+            setSelectedChartView('percentageGdp');
+            gaEvent('19');
           }}
+          id={'total-spending-toggle'}
         >
           <span
             style={{
-              fontSize: isMobile ? "14px" : "16px",
+              fontSize: isMobile ? '14px' : '16px',
               color:
-                selectedChartView === "percentageGdp" ? "#FFFFFF" : "inherit",
-              fontWeight: "600",
+                selectedChartView === 'percentageGdp' ? '#FFFFFF' : 'inherit',
+              fontWeight: 600,
             }}
           >
             Percentage of GDP
           </span>
         </button>
-      </div>{" "}
+      </div>{' '}
       <div className={styles.headerContainer}>
         <div className={styles.headerData}>
           <div
@@ -147,21 +149,21 @@ export const dataHeader = (chartToggleConfig, headingValues, gaEvent) => {
             <span className={styles.dataLabel}>Fiscal Year</span>
           </div>
 
-          {selectedChartView !== "percentageGdp" && (
+          {selectedChartView !== 'percentageGdp' && (
             <div className={styles.dataElement}>
               <div className={styles.dataValue}>${totalSpending}</div>
               <span className={styles.dataLabel}>Total Spending</span>
             </div>
           )}
 
-          {selectedChartView !== "percentageGdp" && (
+          {selectedChartView !== 'percentageGdp' && (
             <div className={styles.dataElement}>
               <div className={styles.dataValue}>${gdp}</div>
               <span className={styles.dataLabel}>GDP</span>
             </div>
           )}
 
-          {selectedChartView === "percentageGdp" && (
+          {selectedChartView === 'percentageGdp' && (
             <div className={styles.dataElement}>
               <div className={styles.dataValue}>{gdpRatio}</div>
               <span className={styles.dataLabel}>GDP Ratio</span>
@@ -188,35 +190,35 @@ const formatPercent = v => {
 };
 
 const chartTheme = {
-  textColor: "#666666",
+  textColor: '#666666',
   axis: {
     domain: {
       line: {
         strokeWidth: 1,
-        stroke: "#666666",
+        stroke: '#666666',
       },
     },
   },
   crosshair: {
     line: {
-      stroke: "#555555",
+      stroke: '#555555',
       strokeWidth: 2,
-      strokeDasharray: "2,2",
+      strokeDasharray: '2,2',
     },
   },
   marker: {
-    fill: "#666666",
+    fill: '#666666',
   },
 };
 
 const layers = [
-  "grid",
-  "axes",
-  "lines",
-  "crosshair",
-  "markers",
-  "points",
-  "mesh",
+  'grid',
+  'crosshair',
+  'markers',
+  'axes',
+  'areas',
+  'lines',
+  'points',
 ];
 
 export const chartConfigs = {
@@ -264,103 +266,75 @@ export const getMarkers = (width, selectedChartView, gdpValue, spendingValue) =>
         {
           ...markerStyle,
           legend: "GDP",
-          value: gdpValue-1.5,
+          value: gdpValue-3,
         },
         {
           ...markerStyle,
           legend: "Total Spending",
-          value: spendingValue-1.5,
+          value: spendingValue-3,
         },
       ];
 };
 
-export const lineChartCustomSlices = ( props, groupMouseLeave, mouseMove ) => {
+export const Point = ({ borderWidth, borderColor, point }) => {
   return (
-    <g data-testid="customSlices"
-      onMouseLeave={groupMouseLeave}
-    >
-      {props.slices.map(slice => (
-        <rect
-          x={slice.x0}
-          y={slice.y0}
-          tabIndex={0}
-          width={slice.width}
-          height={slice.height}
-          strokeWidth={0}
-          strokeOpacity={0.25}
-          fillOpacity={0}
-          onMouseEnter={() => props.setCurrentSlice(slice)}
-          onFocus={() =>{
-            mouseMove(slice)
-            props.setCurrentSlice(slice)}
-           }
-          onMouseMove={() =>{
-           mouseMove(slice)
-           props.setCurrentSlice(slice)}
-          }
-          onMouseLeave={() => props.setCurrentSlice(null)}
-        />
-      ))}
-    </g>
-  );
-};
+    <>
+      <circle
+        r={8}
+        strokeWidth={borderWidth}
+        stroke={borderColor}
+        fill="#D8D8D8"
+        fillOpacity={0.35}
+        cx={point?.x}
+        cy={point?.y}
+      />
+      <circle
+        r={2}
+        strokeWidth="4"
+        stroke="#000000"
+        fill="#000000"
+        fillOpacity={0.85}
+        cx={point?.x}
+        cy={point?.y}
+      />
+    </>
+  )
+}
 
-export const lineChartCustomPoints = props => {
-  const { currentSlice, borderWidth, borderColor, points } = props;
+export const lineChartCustomPoints = (
+  { currentSlice, borderWidth, borderColor, points }) => {
+  const getLastValue = (values, name) =>
+    values.filter(g => g.serieId === name).sort((a,b) => a.id.localeCompare(b.id, undefined, {numeric: true})).pop();
 
-    const lastGdpPoints = points.filter(g => g.serieId == 'GDP').pop();
+  const lastSpendingPoints = getLastValue(points, 'Total Spending');
 
-    const currentSpendingPoint = currentSlice?.points?.length
-      ? currentSlice.points[0]
-      : points[points.length - 1];
+  const lastRevenuePoints = getLastValue(points, 'Total Revenue');
 
-    const currentGdpPoint = currentSlice?.points?.length
-      ? currentSlice.points[1]
-      : lastGdpPoints;
+  const lastGdpPoints = getLastValue(points,'GDP');
 
-    return (
+  const lastGDPPercentagePoints = getLastValue(points,'GDP Percentage');
+
+  const defaultPrimaryPoint = lastSpendingPoints ? lastSpendingPoints
+                              : (lastRevenuePoints ? lastRevenuePoints : lastGDPPercentagePoints);
+
+  const currentPrimaryPoint = currentSlice?.points?.length
+    ? currentSlice.points[0]
+    : defaultPrimaryPoint;
+
+  const currentGdpPoint = currentSlice?.points?.length
+    ? currentSlice.points[1]
+    : lastGdpPoints;
+
+  return (
+    <>
       <g data-testid="customPoints">
-        <circle
-          fill={'#D8D8D8'}
-          r={8}
-          strokeWidth={borderWidth}
-          stroke={borderColor}
-          fillOpacity={0.35}
-          cx={currentSpendingPoint?.x}
-          cy={currentSpendingPoint?.y}
-        />
-        <circle
-          r={2}
-          strokeWidth={'4'}
-          stroke={'#000000'}
-          fill={'#000000'}
-          fillOpacity={0.85}
-          cx={currentSpendingPoint?.x}
-          cy={currentSpendingPoint?.y}
-        />
+        {currentPrimaryPoint && (
+          <Point borderColor={borderColor} borderWidth={borderWidth} point={currentPrimaryPoint} />
+        )}
         {currentGdpPoint && (
-          <>
-            <circle
-              fill={'#D8D8D8'}
-              r={8}
-              strokeWidth={borderWidth}
-              stroke={borderColor}
-              fillOpacity={0.35}
-              cx={currentGdpPoint.x}
-              cy={currentGdpPoint.y}
-            />
-            <circle
-              r={2}
-              strokeWidth={'4'}
-              stroke={'#000000'}
-              fill={'#000000'}
-              fillOpacity={0.85}
-              cx={currentGdpPoint.x}
-              cy={currentGdpPoint.y}
-            />
-          </>
+          <Point borderColor={borderColor} borderWidth={borderWidth} point={currentGdpPoint} />
         )}
       </g>
-    );
-
+    </>
+  );
 };

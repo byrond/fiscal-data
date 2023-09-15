@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import {Link as ScrollLink} from 'react-scroll';
+
 import SectionContent from '../../../components/api-documentation/section-content/section-content';
 import '../../../styles.scss';
 import * as styles from '../about-us.module.scss';
@@ -7,7 +7,6 @@ import GLOBALS from '../../../helpers/constants';
 import CustomLink from "../../../components/links/custom-link/custom-link";
 
 const FAQ = ({triggerHighlight = 0}) => {
-  const smoothScrollConfig = GLOBALS.config.smooth_scroll;
   const commonSectionHeadingLevel = 3;
   const highlightTime = GLOBALS.config.highlight.defaultTimeToHighlight;
 
@@ -77,9 +76,8 @@ const FAQ = ({triggerHighlight = 0}) => {
         title="How often is the data updated?"
       >
           <p>
-            The answer varies by dataset. To determine the update frequency, refer to the <strong>
-            Metadata
-                                                                                          </strong> tab in the <strong>About this Dataset</strong> section for a
+            The answer varies by dataset. To determine the update frequency, refer to the <strong>Metadata</strong>
+            tab in the <strong>About this Dataset</strong> section for a
             particular dataset. You can also filter the datasets in our{' '}
             <CustomLink url="/datasets/">
               Dataset Search
@@ -116,7 +114,6 @@ const FAQ = ({triggerHighlight = 0}) => {
             about new features and datasets,{' '}
             <CustomLink url="mailto:join-fiscal-data-gov@lists.fiscal.treasury.gov?subject=Yes,
             I’d like to receive updates from Fiscal Data!"
-                        external
             >
               sign up for our mailing list
             </CustomLink>.
@@ -165,15 +162,9 @@ const FAQ = ({triggerHighlight = 0}) => {
       >
           <p>
             Please{' '}
-            <ScrollLink to="contact-us"
-                               data-test-id="contact"
-                               className="primary"
-                               smooth={true}
-                               duration={smoothScrollConfig.duration}
-                               delay={smoothScrollConfig.delay}
-            >
+            <CustomLink url="mailto:fiscaldata@fiscal.treasury.gov?subject=Contact Us">
               contact us
-            </ScrollLink> with questions about the
+            </CustomLink> with questions about the
              data or to submit recommendations.
           </p>
           <div>

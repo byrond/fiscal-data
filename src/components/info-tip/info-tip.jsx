@@ -7,10 +7,10 @@ import { faInfoCircle } from "@fortawesome/free-solid-svg-icons/faInfoCircle";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import * as styles from './info-tip.module.scss';
 import { withWindowSize } from "react-fns";
-import { pxToNumber } from '../../../src/helpers/styles-helper/styles-helper';
+import { pxToNumber } from '../../helpers/styles-helper/styles-helper';
 import { breakpointLg } from '../../variables.module.scss';
 
-const useStyles = makeStyles(theme => ({
+const style = {
   button: {
     backgroundColor: 'transparent',
     border: 'none',
@@ -35,37 +35,43 @@ const useStyles = makeStyles(theme => ({
       width: '17rem'
     }
   },
-  primarySvgColor: {
-    "& path": {
-      fill: '#aeb0b5'
-    }
-  },
   secondarySvgColor: {
     "& path": {
       fill: '#000'
     }
   },
-  popupContainer: {
-    padding: theme.spacing(2),
-  },
-}));
+};
 
 export const infoTipAnalyticsObject = {
   category: 'Dataset Search Page',
   action: 'Info Button Click'
 }
 
-const InfoTip = ({ width, title, secondary, clickEvent, glossaryText, children }) => {
+const InfoTip = ({ width, title, secondary, clickEvent, glossaryText, iconStyle, hover, children }) => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [previousScrollPosition, setPreviousScrollPosition] = useState(0);
+
+  const useStyles = makeStyles(theme => (
+    {
+      ...style,
+      popupContainer: {
+        padding: theme.spacing(2),
+      },
+      primarySvgColor: {
+        "& path": {
+          fill: iconStyle?.color ? iconStyle.color : '#aeb0b5'
+        }
+      },
+    }
+  ))
   const handleScroll = () => {
     const position = window.pageYOffset;
     setPreviousScrollPosition(scrollPosition);
     setScrollPosition(position);
 
-    if (scrollPosition != previousScrollPosition) {
+    if (scrollPosition !== previousScrollPosition) {
       handleClose();
-    };
+    }
   };
 
   useEffect(() => {
@@ -75,6 +81,7 @@ const InfoTip = ({ width, title, secondary, clickEvent, glossaryText, children }
       window.removeEventListener("scroll", handleScroll);
     };
   }, [scrollPosition]);
+
   const {
     button,
     primarySvgColor,
@@ -92,20 +99,6 @@ const InfoTip = ({ width, title, secondary, clickEvent, glossaryText, children }
     }
   };
 
-  const handleGlossaryClick = (e) => {
-    const anchor = e.currentTarget;
-    if (e.key === undefined || e.key === 'Enter') {
-      e.stopPropagation();
-      if (e.type === 'mouseenter') {
-        timeout = setTimeout(() => {
-          setAnchorEl(anchor);
-        }, 500);
-      } else {
-        setAnchorEl(e.currentTarget);
-      }
-    }
-  };
-
   const handleMouseLeave = () => {
     clearTimeout(timeout);
   }
@@ -118,36 +111,43 @@ const InfoTip = ({ width, title, secondary, clickEvent, glossaryText, children }
   const id = open ? 'simple-popover' : undefined;
   const label = `More information about ${title}.`;
 
+  const getHeader = () => {
+    if(title) {
+      return (
+        <>
+          {
+            width < pxToNumber(breakpointLg) ?
+            <span>
+              <FontAwesomeIcon className={styles.mobileFA} icon={faXmark} onClick={handleClose} />
+              <h6 className={styles.header}>{title}</h6>
+            </span>
+            :
+            <div>
+              <h6 className={styles.header}>{title}</h6>
+            </div>
+          }
+        </>
+      )
+    }
+  }
   return (
     <span data-testid="infoTipContainer">
-      {glossaryText ? (
-        <span
-          className={styles.glossaryButton}
-          onMouseEnter={handleGlossaryClick}
-          onMouseLeave={handleMouseLeave}
-          onClick={handleGlossaryClick}
-          onKeyPress={handleGlossaryClick}
-          role="button"
-          tabIndex={0}
-        >
-          {glossaryText}
-        </span>
-      ) : (
         <Button
           aria-describedby={id}
-          aria-label={label}
+          aria-label={title ? label : null}
           data-testid="infoTipButton"
           variant="contained"
-          className={`${button} ${styles.infoIcon}`}
+          className={`${button} ${styles.infoIcon} infoTipIcon`}
           onClick={handleClick}
-          onMouseLeave={handleClose}
+          onMouseLeave={handleMouseLeave}
+          onMouseEnter={hover ? handleClick : null}
         >
           <FontAwesomeIcon
             icon={faInfoCircle}
             className={`${styles.svgStyle} ${secondary ? secondarySvgColor : primarySvgColor}`}
+            style={iconStyle}
           />
         </Button>
-      )}
         <Popover
           id={id}
           className={popOver}
@@ -164,24 +164,14 @@ const InfoTip = ({ width, title, secondary, clickEvent, glossaryText, children }
             horizontal: 'center',
           }}
         >
-
           <div
             className={`${popupContainer} ${styles.popupContainer}`}
             data-testid="popupContainer"
             onMouseLeave={handleClose}
+            role={'presentation'}
           >
-            {width < pxToNumber(breakpointLg) ?
-              <span>
-                <FontAwesomeIcon className={styles.mobileFA}icon={faXmark} onClick={handleClose} />
-                <h6 className={styles.header}>{title}</h6>
-              </span>
-              :
-              <div>
-                <h6 className={styles.header}>{title}</h6>
-              </div>
-            }
-
-            <div className={styles.popoverContents}>
+            {getHeader()}
+            <div className={`${styles.popoverContents} infoTipPopoverContents`}>
               {children}
             </div>
           </div>

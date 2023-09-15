@@ -19,7 +19,7 @@ export const siteFooterColumns = [
       },
       {
         title: 'Contact Us',
-        to: '/about-us/#contact-us',
+        to: 'mailto:fiscaldata@fiscal.treasury.gov?subject=Contact Us',
         actionTitle: 'Contact',
         testId: 'contact'
       }
@@ -51,12 +51,6 @@ export const siteFooterColumns = [
     title: 'Our Sites',
     links: [
       {
-        title: 'Data Lab',
-        to: globalConstants.DATA_LAB_URL,
-        testId: 'dataLab',
-        isExternal: true
-      },
-      {
         title: 'USAspending',
         to: globalConstants.USA_SPENDING_URL,
         testId: 'usaSpending',
@@ -75,6 +69,11 @@ const SiteFooter = () => {
       action: `Bottom ${action} Click`,
       label: document.title
     });
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      'event': `${action}-click`,
+      'eventLabel':document.title
+    });
   }
 
   return (
@@ -88,6 +87,7 @@ const SiteFooter = () => {
             className={styles.logo}
             to="/"
             onClick={() => clickHandler('Logo')}
+            aria-label={'Redirect to Fiscal Data homepage'}
           >
             <StaticImage
               src="../../images/logos/fd-logo-ko.svg"
@@ -96,6 +96,7 @@ const SiteFooter = () => {
               width={171}
               placeholder="tracedSVG"
               layout="fixed"
+              aria-label={'Fiscal Data logo'}
             />
           </Link>
           <div className={styles.pageLinks}>

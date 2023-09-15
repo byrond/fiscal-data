@@ -13,14 +13,19 @@ import {
   selectedTableLessFields,
   selectedPivot,
   pivotFields,
-  selectedPivotWithAggregation
+  selectedPivotWithAggregation,
+  mockTableWithUserFilterAvailable,
+  mockApiDataUserFilterable
 } from './testHelpers';
 import * as setNoChartMessageMod from './set-no-chart-message';
 import ChartTableToggle from '../chart-table-toggle/chart-table-toggle';
 import DatasetChart from '../dataset-chart/dataset-chart';
 import AggregationNotice from './aggregation-notice/aggregation-notice';
 import GLOBALS from '../../../helpers/constants';
-import { render, fireEvent } from "@testing-library/react"
+import { render, fireEvent, waitFor } from "@testing-library/react"
+import NotShownMessage from "./not-shown-message/not-shown-message";
+import userEvent from '@testing-library/user-event';
+
 
 describe('TableSectionContainer initial state', () => {
   let component, instance;
@@ -119,6 +124,37 @@ describe('TableSectionContainer with data', () => {
     });
     instance = component.root;
     expect(instance.findAllByType(PivotToggle).length).toEqual(0);
+  });
+});
+
+describe('TableSectionContainer with userFilter Options', () => {
+  it('displays the NotShownMessage when a user filter is engaged that matches no rows', () => {
+    let tableSectionContainer = {};
+    renderer.act(() => {
+      tableSectionContainer = renderer.create(
+        <TableSectionContainer
+          config={mockConfig}
+          dateRange={mockDateRange}
+          selectedTable={mockTableWithUserFilterAvailable}
+          userFilterSelection={{label: 'Auditorium', value: 'Auditorium'}}
+          apiData={mockApiDataUserFilterable}
+          isLoading={false}
+          apiError={false}
+          setSelectedPivot={jest.fn()}
+        />
+      );
+    });
+
+    const notShownMessages = tableSectionContainer.root.findAllByType(NotShownMessage);
+    expect(notShownMessages.length).toStrictEqual(2);
+    notShownMessages.forEach(notShownMessage => {
+      expect(notShownMessage.props.heading)
+        .toContain('The Facility Description specified does not have');
+      expect(notShownMessage.props.heading)
+        .toContain('available data within the date range selected.');
+      expect(notShownMessage.props.bodyText)
+        .toStrictEqual(mockTableWithUserFilterAvailable.userFilter.dataUnmatchedMessage);
+    });
   });
 });
 
@@ -432,6 +468,75 @@ describe('TableSectionContainer with Pivot Options', () => {
     datasetChart = tableSectionContainer.root.findByType(DatasetChart);
     // Expect legend to still be invisible after change to tablet
     expect(datasetChart.props.legend).toBeFalsy();
+  });
+
+});
+
+describe('TableSectionContainer with Select Column', () => {
+  const mockSetSelectedPivot = jest.fn();
+  const selectedTable = selectedTableLessFields;
+  const selectColMockConfig = {
+    name: 'my name',
+    slug: 'mock/slug/here',
+    apis: [
+      selectedTableLessFields,
+      mockTableWithNoChartAvailable,
+      mockTableWithPivot
+    ],
+    selectColumns: ['facility_desc', 'book_value_amt']
+  }
+
+  it('should show select column panel when select column is toggled on', async() => {
+    const {getByRole, getByTestId} = render(<TableSectionContainer
+      config={selectColMockConfig}
+      dateRange={mockDateRange}
+      selectedTable={selectedTable}
+      selectedTab={0}
+      apiData={mockApiData}
+      isLoading={false}
+      apiError={false}
+      selectedPivot={selectedPivot}
+      setSelectedPivot={mockSetSelectedPivot} />);
+
+      const selectColumns = getByTestId('selectColumnsMainContainer');
+      expect(selectColumns).toHaveClass('selectColumnPanel');
+
+      const selectColToggle = getByRole('button', {name: 'Select Columns'});
+      userEvent.click(selectColToggle);
+
+      await waitFor(() => {
+        expect(selectColumns).toHaveClass('selectColumnPanelActive');
+      });
+
+  });
+
+  it('should hide select column panel when select column is toggled off', async () => {
+    const {getByRole, getByTestId} = render(<TableSectionContainer
+      config={selectColMockConfig}
+      dateRange={mockDateRange}
+      selectedTable={selectedTable}
+      selectedTab={0}
+      apiData={mockApiData}
+      isLoading={false}
+      apiError={false}
+      selectedPivot={selectedPivot}
+      setSelectedPivot={mockSetSelectedPivot} />);
+
+      const selectColumns = getByTestId('selectColumnsMainContainer');
+      expect(selectColumns).toHaveClass('selectColumnPanel');
+
+      const selectColToggle = getByRole('button', {name: 'Select Columns'});
+      userEvent.click(selectColToggle);
+
+      await waitFor(() => {
+        expect(selectColumns).toHaveClass('selectColumnPanelActive');
+      });
+
+      userEvent.click(selectColToggle);
+
+      await waitFor(() => {
+        expect(selectColumns).toHaveClass('selectColumnPanel');
+      });
   });
 
 });

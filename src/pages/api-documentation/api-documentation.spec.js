@@ -1,19 +1,18 @@
 import React from 'react';
 import renderer from 'react-test-renderer';
-import {useStaticQuery} from "gatsby";
-import ApiDocumentationPage, {scrollOptions} from "./index";
+import { useStaticQuery } from 'gatsby';
+import ApiDocumentationPage from './index';
 import GettingStarted from '../../components/api-documentation/getting-started/getting-started';
 import Endpoints from '../../components/api-documentation/endpoints/endpoints';
 import Methods from '../../components/api-documentation/methods/methods';
 import Fields from '../../components/api-documentation/fields/fields';
 import Aggregation from '../../components/api-documentation/aggregation/aggregation';
-import Pivoting from '../../components/api-documentation/pivoting/pivoting';
-import MultiDimensionDatasets from '../../components/api-documentation/multi-dimension-datasets/multi-dimension-datasets';
 import Examples from '../../components/api-documentation/examples/examples';
 import * as styles from './api.module.scss';
-import TOCButton from "../../components/table-of-contents/toc-button/toc-button";
-import * as addressBar from "../../helpers/address-bar/address-bar";
-import {animateScroll} from "react-scroll";
+import TOCButton from '../../components/table-of-contents/toc-button/toc-button';
+import * as addressBar from '../../helpers/address-bar/address-bar';
+import { animateScroll } from 'react-scroll';
+import { scrollOptionsSmooth } from '../../utils/scroll-config';
 
 jest.useFakeTimers();
 describe('ApiDocumentationPage', () => {
@@ -73,12 +72,6 @@ describe('ApiDocumentationPage', () => {
   it('expects Aggregation to be within its layout', () => {
     expect(instance.findByType(Aggregation)).toBeDefined();
   });
-  it('expects Pivoting to be within its layout', () => {
-    expect(instance.findByType(Pivoting)).toBeDefined();
-  });
-  it('expects Multi-Dimension Datasets to be within its layout', () => {
-    expect(instance.findByType(MultiDimensionDatasets)).toBeDefined();
-  });
   it('expects Examples to be within its layout', () => {
     expect(instance.findByType(Examples)).toBeDefined();
   });
@@ -127,10 +120,10 @@ describe('ApiDocumentationPage', () => {
       return undefined
     })
     renderer.act(() => buttonElement.props.onClick());
-    expect(scrollToTopSpy).toHaveBeenCalledWith(scrollOptions);
+    expect(scrollToTopSpy).toHaveBeenCalledWith(scrollOptionsSmooth);
     expect(scrollToSpy).not.toHaveBeenCalled();
     renderer.act(() => buttonElement.props.onClick());
-    expect(scrollToSpy).toHaveBeenCalledWith(testYOffset, scrollOptions);
+    expect(scrollToSpy).toHaveBeenCalledWith(testYOffset, scrollOptionsSmooth);
   });
 
   it('calls updateAddressPath to update the url when a toc element is clicked' , () => {

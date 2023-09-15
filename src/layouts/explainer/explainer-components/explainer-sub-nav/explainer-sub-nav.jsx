@@ -1,29 +1,59 @@
-import React, {useState, useEffect} from 'react'
-import {Link} from "gatsby"
-import * as styles from './explainer-sub-nav.module.scss'
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faHouseChimney} from "@fortawesome/free-solid-svg-icons";
+import React, {useState, useEffect} from 'react';
+import {Link} from 'gatsby';
+import {
+  backChevron,
+  frontChevron,
+  navItem,
+  overview,
+  revenue,
+  active,
+  navLink,
+  navIcon,
+  navContainer,
+  navBlock,
+  navBlockHidden,
+  navBlockSticky,
+  deficit,
+  spending,
+  debt,
+} from './explainer-sub-nav.module.scss';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faHouseChimney} from '@fortawesome/free-solid-svg-icons';
+import Analytics from '../../../../utils/analytics/analytics';
 
 export default function ExplainerSubNav({hidePosition}) {
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [navBlockStyle, setNavBlockStyle] = useState(styles.navBlock);
+  const [navBlockStyle, setNavBlockStyle] = useState(navBlock);
 
   const handleScroll = () => {
-    const prevScrollPosition = scrollPosition
-    const currPosition = window.pageYOffset;
+    const prevScrollPosition = scrollPosition;
+    const currPosition = window.pageYOffset; //TODO: Look into replacing
     setScrollPosition(currPosition);
 
     if (currPosition > hidePosition) {
       //Scrolling Down
       if (prevScrollPosition < currPosition) {
-        setNavBlockStyle(styles.navBlockHidden)
+        setNavBlockStyle(navBlockHidden);
       } else {
-        setNavBlockStyle(styles.navBlockSticky)
+        setNavBlockStyle(navBlockSticky);
       }
     } else {
-      setNavBlockStyle(styles.navBlock)
+      setNavBlockStyle(navBlock);
     }
   };
+
+  const analyticsEvent = (title) => {
+    Analytics.event({
+      category: 'Explainers',
+      action: `Sub Nav Click`,
+      label: title
+    });
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      'event': 'Sub Nav Click',
+      'eventLabel': title,
+    });
+  }
 
 
   useEffect(() => {
@@ -35,51 +65,53 @@ export default function ExplainerSubNav({hidePosition}) {
 
   }, [scrollPosition]);
   return (
-    <div id={styles.navContainer} data-testid="explainerSubNav">
+    <div className={navContainer} data-testid="explainerSubNav">
       <ul className={navBlockStyle} data-testid="explainerSubNavList">
-        <li className={[styles.navItem, styles.noverview, styles.nactive].join(' ')}>
-          <Link to='/americas-finance-guide/' className={styles.navLink} activeClassName={styles.active}>
-            <FontAwesomeIcon icon={faHouseChimney} className={styles.navIcon} />
-            <span className={styles.navLinkText}>Overview</span>
-          </Link>
-        </li>
-        <li className={[styles.frontChevron, styles.overview].join(' ')}></li>
-        <li className={[styles.backChevron, styles.revenue].join(' ')}></li>
-        <li className={[styles.navItem, styles.revenue].join(' ')}>
-          <Link to='/americas-finance-guide/government-revenue/' className={styles.navLink}
-                activeClassName={styles.active}
+        <li className={navItem}>
+          <Link to='/americas-finance-guide/' className={navLink}
+                activeClassName={active} onClick={() => analyticsEvent('Overview')}
           >
-            <span className={styles.navLinkText}>Revenue</span>
+            <FontAwesomeIcon icon={faHouseChimney} className={navIcon} />
+            <span>Overview</span>
           </Link>
         </li>
-        <li className={[styles.frontChevron, styles.revenue].join(' ')}></li>
-        <li className={[styles.backChevron, styles.spending].join(' ')}></li>
-        <li className={[styles.navItem, styles.spending].join(' ')}>
-          <Link to='/americas-finance-guide/federal-spending/' className={styles.navLink}
-                activeClassName={styles.active}
+        <li className={[frontChevron, overview].join(' ')} />
+        <li className={[backChevron, revenue].join(' ')} />
+        <li className={[navItem, revenue].join(' ')}>
+          <Link to='/americas-finance-guide/government-revenue/' className={navLink}
+                activeClassName={active}  onClick={() => analyticsEvent('Revenue')}
           >
-            <span className={styles.navLinkText}>Spending</span>
+            <span>Revenue</span>
           </Link>
         </li>
-        <li className={[styles.frontChevron, styles.spending].join(' ')}></li>
-        <li className={[styles.backChevron, styles.deficit].join(' ')}></li>
-        <li className={[styles.navItem, styles.deficit].join(' ')}>
-          <Link to='/americas-finance-guide/national-deficit/' className={styles.navLink}
-                activeClassName={styles.active}
+        <li className={[frontChevron, revenue].join(' ')} />
+        <li className={[backChevron, spending].join(' ')} />
+        <li className={[navItem, spending].join(' ')}>
+          <Link to='/americas-finance-guide/federal-spending/' className={navLink}
+                activeClassName={active} onClick={() => analyticsEvent('Spending')}
           >
-            <span className={styles.navLinkText}>Deficit</span>
+            <span>Spending</span>
           </Link>
         </li>
-        <li className={[styles.frontChevron, styles.deficit].join(' ')}></li>
-        <li className={[styles.backChevron, styles.debt].join(' ')}></li>
-        <li className={[styles.navItem, styles.debt].join(' ')}>
-          <Link to='/americas-finance-guide/national-debt/' className={styles.navLink} activeClassName={styles.active}>
-            <span className={styles.navLinkText}>Debt</span>
+        <li className={[frontChevron, spending].join(' ')} />
+        <li className={[backChevron, deficit].join(' ')} />
+        <li className={[navItem, deficit].join(' ')}>
+          <Link to='/americas-finance-guide/national-deficit/' className={navLink}
+                activeClassName={active} onClick={() => analyticsEvent('Deficit')}
+          >
+            <span>Deficit</span>
           </Link>
         </li>
-
+        <li className={[frontChevron, deficit].join(' ')} />
+        <li className={[backChevron, debt].join(' ')} />
+        <li className={[navItem, debt].join(' ')}>
+          <Link to='/americas-finance-guide/national-debt/' className={navLink}
+                activeClassName={active} onClick={() => analyticsEvent('Debt')}
+          >
+            <span>Debt</span>
+          </Link>
+        </li>
       </ul>
-
     </div>
   )
 }

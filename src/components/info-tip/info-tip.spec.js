@@ -1,6 +1,5 @@
 import React from 'react';
-import { render, act } from '@testing-library/react';
-import  userEvent from '@testing-library/user-event'
+import { render, act, fireEvent } from '@testing-library/react';
 import InfoTip from "./info-tip";
 
 describe('InfoTip', () => {
@@ -32,57 +31,18 @@ describe('InfoTip', () => {
     expect(getByTestId('popupContainer')).toBeInTheDocument();
     expect(clickEvent).toHaveBeenCalled();
   })
-});
 
-describe('InfoTip for glossary terms',  () => {
-  const glossaryTitle = 'Term';
-  const glossaryBody = 'Definition';
-  const GlossaryInfoTipComponent = <InfoTip title={glossaryTitle} glossaryText={glossaryTitle}>{glossaryBody}</InfoTip>;
+  it('shows the popup on hover when hover is true', () => {
+    const { getByTestId } = render(<InfoTip title={title} hover>{body}</InfoTip>);
+    const button = getByTestId('infoTipButton');
 
-  beforeAll(() => {
-    jest.useFakeTimers();
-  });
-  afterAll(() => {
-    jest.useRealTimers();
-  });
-
-  it('shows the popup after hovering for .5 seconds', () => {
-    jest.spyOn(global,'setTimeout');
-
-    const { getByRole, getByTestId } = render(GlossaryInfoTipComponent);
-    const button = getByRole('button', {name: glossaryTitle});
     act(() => {
-      userEvent.hover(button);
-    });
-    jest.runOnlyPendingTimers();
-    expect(setTimeout).toHaveBeenCalled();
-    expect(getByTestId('popupContainer')).toBeInTheDocument();
-  });
-
-  it('will not render popup if mouse moves away before .5 seconds', () => {
-    jest.spyOn(global,'setTimeout');
-    jest.spyOn(global,'clearTimeout');
-    const { getByRole, queryByTestId } = render(GlossaryInfoTipComponent);
-    const button = getByRole('button', {name: glossaryTitle});
-    act(() => {
-      userEvent.hover(button);
-      userEvent.unhover(button);
-    });
-    expect(setTimeout).toHaveBeenCalled();
-    expect(clearTimeout).toHaveBeenCalled();
-    expect(queryByTestId('popupContainer')).toBeNull();
-  });
-
-  it('opens the popup when the user tabs into the button and hits enter', () => {
-    const { getByRole, queryByTestId, getByTestId } = render(GlossaryInfoTipComponent);
-    const button = getByRole('button', {name: glossaryTitle});
-
-    userEvent.tab();
-    expect(button).toHaveFocus();
-    act(() => {
-      userEvent.keyboard('[enter]');
+      fireEvent.mouseEnter(button);
     });
 
     expect(getByTestId('popupContainer')).toBeInTheDocument();
-  });
+  })
+
+
 });
+

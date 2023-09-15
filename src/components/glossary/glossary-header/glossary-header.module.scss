@@ -1,0 +1,42 @@
+
+@import '../../../variables.module.scss';
+
+.headerContainer {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+  margin-right: 1rem;
+
+  .header {
+    margin-bottom: 1.625rem;
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .title {
+      font-weight: $semi-bold-weight;
+      .bookIcon {
+        width: 0.75rem;
+        height: 0.875rem;
+        color: #666;
+        margin-right: 0.5rem;
+      }
+    }
+    .closeButton {
+      background: none;
+      border: none;
+      cursor: pointer;
+      .closeIcon {
+        color: $primary;
+        :not(svg root) {
+          width: 100%;
+          height: 1.2rem;
+        }
+      }
+      :hover {
+        color: $slate-blue;
+      }
+    }
+  }
+}
+
