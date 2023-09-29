@@ -19,6 +19,13 @@ const customFormat = (stringValue, decimalPlaces) => {
 export const columnsConstructor = (rawData: any, dateRangeColumns): any => {
   if (rawData.meta) {
     return Object.entries(rawData.meta.labels).map(([field, label]) => {
+      if (field === 'cusip') {
+        return {
+          accessorKey: field,
+          header: label,
+          sortingFn: 'basic',
+        } as ColumnDef<string, Date>;
+      }
       if (field === 'record_date') {
         return {
           accessorKey: field,
