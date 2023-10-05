@@ -2,6 +2,8 @@ import { render, within } from '@testing-library/react';
 import React from 'react';
 import { fireEvent } from '@testing-library/dom';
 import DataTable from './data-table';
+import DataTableColumnSelector from './column-select/data-table-column-selector';
+import axe from 'axe-core';
 
 const mockTableData = {
   data: [

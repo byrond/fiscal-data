@@ -31,11 +31,11 @@ const TextFilter: FunctionComponent<any> = ({
     column.setFilterValue(val);
     setFilterDisplay(val);
     if (val.length > 0) {
-      if (!allActiveFilters.includes(column.id)) {
+      if (!allActiveFilters?.includes(column.id)) {
         setAllActiveFilters([...allActiveFilters, column.id]);
       }
     } else {
-      if (allActiveFilters.includes(column.id)) {
+      if (allActiveFilters?.includes(column.id)) {
         const currentFilters = allActiveFilters.filter(value => value !== column.id);
         setAllActiveFilters(currentFilters);
       }

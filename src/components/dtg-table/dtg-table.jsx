@@ -28,6 +28,7 @@ export default function DtgTable({
   resetFilters,
   setResetFilters,
   setFiltersActive,
+  meta,
 }) {
   const {
     dePaginated,
@@ -46,11 +47,13 @@ export default function DtgTable({
     hideColumns,
     hasPublishedReports,
     publishedReports,
+    dePaginatedMaxPage,
   } = tableProps;
 
   const [reactTableData, setReactTableData] = useState(null);
 
   useEffect(() => {
+    // console.log('react table data', dePaginated, rawData);
     if (tableProps) {
       if (dePaginated !== undefined) {
         if (dePaginated !== null) {
@@ -299,12 +302,14 @@ export default function DtgTable({
   }, [tableData]);
 
   useEffect(() => {
+    // console.log('data: ', data);
     if (data && data.length) {
       setMaxRows(apiError ? 0 : data.length);
     }
   }, [data]);
 
   useEffect(() => {
+    // console.log('tableProps.data: ', tableProps.data);
     if (!tableProps.data) {
       setCurrentPage(1);
     }
@@ -312,8 +317,19 @@ export default function DtgTable({
   }, [tableProps.data]);
 
   useEffect(() => {
+    console.log('meta:', meta);
+    if (tableData?.length === 10 && dePaginatedMaxPage) {
+      console.log('table data: ', tableData, 'meta:', dePaginatedMaxPage);
+      // console.log('react table data: ', reactTableData);
+    }
+  }, [tableData, meta]);
+
+  useEffect(() => {
     setShowPaginationControls(isPaginationControlNeeded());
   }, [maxRows]);
+  useEffect(() => {
+    console.log('current page: ', currentPage);
+  }, [currentPage]);
 
   if (maxRows === 1) {
     rowText[0] = '';
@@ -340,25 +356,32 @@ export default function DtgTable({
           </div>
         </>
       )}
-      {reactTableData ? (
-        <DataTable
-          rawData={reactTableData}
-          defaultSelectedColumns={selectColumns}
-          setTableColumnSortData={setTableColumnSortData}
-          hideCellLinks={true}
-          shouldPage={shouldPage}
-          pagingProps={pagingProps}
-          showPaginationControls={showPaginationControls}
-          hasPublishedReports={hasPublishedReports}
-          publishedReports={publishedReports}
-          setSelectColumnPanel={setSelectColumnPanel}
-          selectColumnPanel={selectColumnPanel}
-          resetFilters={resetFilters}
-          setResetFilters={setResetFilters}
-          pageSize={pagingProps.itemsPerPage}
-          setFiltersActive={setFiltersActive}
-          hideColumns={hideColumns}
-        />
+      {tableData.length >= 10 && meta ? (
+        <>
+          <button onClick={() => setCurrentPage(2)}>test :)</button>
+
+          <DataTable
+            rawData={{ data: tableData, meta: meta }}
+            defaultSelectedColumns={selectColumns}
+            setTableColumnSortData={setTableColumnSortData}
+            hideCellLinks={true}
+            shouldPage={shouldPage}
+            pagingProps={pagingProps}
+            showPaginationControls={showPaginationControls}
+            hasPublishedReports={hasPublishedReports}
+            publishedReports={publishedReports}
+            setSelectColumnPanel={setSelectColumnPanel}
+            selectColumnPanel={selectColumnPanel}
+            resetFilters={resetFilters}
+            setResetFilters={setResetFilters}
+            pageSize={pagingProps.itemsPerPage}
+            setFiltersActive={setFiltersActive}
+            hideColumns={hideColumns}
+            dateRange={dateRange}
+            maxPage={dePaginatedMaxPage}
+            setCurrentPage={setCurrentPage}
+          />
+        </>
       ) : (
         <>
           <div data-test-id="table-content" className={styles.overlayContainerNoFooter}>

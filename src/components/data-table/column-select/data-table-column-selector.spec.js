@@ -1,6 +1,7 @@
 import { fireEvent, render } from '@testing-library/react';
 import React from 'react';
 import DataTableColumnSelector from './data-table-column-selector';
+import axe from 'axe-core';
 
 describe('Column Selector', () => {
   const mockAdditionalColumns = [

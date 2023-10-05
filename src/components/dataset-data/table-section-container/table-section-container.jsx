@@ -54,22 +54,24 @@ const TableSectionContainer = ({
   const [resetFilters, setResetFilters] = useState(false);
   const [filtersActive, setFiltersActive] = useState(false);
 
+  const [maxPage, setMaxPage] = useState(undefined);
+
   // Investigate why this is being called twice?
   const getDepaginatedData = async () => {
     const from = formatDateForApi(dateRange.from);
     const to = formatDateForApi(dateRange.to);
     const sortParam = buildSortParams(selectedTable, selectedPivot);
-    return await basicFetch(
+    const data = await basicFetch(
       `${apiPrefix}${selectedTable.endpoint}?filter=${selectedTable.dateField}:gte:${from},${selectedTable.dateField}` +
         `:lte:${to}&sort=${sortParam}`
     ).then(async res => {
       const totalCount = res.meta['total-count'];
       const pageSize = totalCount >= MAX_PAGE_SIZE ? MAX_PAGE_SIZE : totalCount;
-      return await basicFetch(
-        `${apiPrefix}${selectedTable.endpoint}?filter=${selectedTable.dateField}:gte:${from},${selectedTable.dateField}` +
-          `:lte:${to}&sort=${sortParam}&page[size]=${pageSize}`
-      );
+      // console.log('pageSize', pageSize);
+      return res.meta;
     });
+    setMaxPage(data);
+    console.log('pageSize ***', data);
   };
 
   const refreshTable = async () => {
@@ -105,6 +107,7 @@ const TableSectionContainer = ({
       hideColumns: config.hideColumns,
       excludeCols: ['CHART_DATE'],
       aria: { 'aria-labelledby': 'main-data-table-title' },
+      dePaginatedMaxPage: maxPage,
     });
   };
 
@@ -231,6 +234,7 @@ const TableSectionContainer = ({
                   resetFilters={resetFilters}
                   setResetFilters={setResetFilters}
                   setFiltersActive={setFiltersActive}
+                  meta={maxPage}
                 />
               ) : (
                 ''

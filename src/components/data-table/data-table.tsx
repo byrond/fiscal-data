@@ -34,6 +34,9 @@ type DataTableProps = {
   pageSize: number;
   setFiltersActive: (value: boolean) => void;
   hideColumns?: string[];
+  dateRange;
+  maxPage: number;
+  setCurrentPage;
 };
 
 const DataTable: FunctionComponent<DataTableProps> = ({
@@ -53,8 +56,12 @@ const DataTable: FunctionComponent<DataTableProps> = ({
   pageSize,
   setFiltersActive,
   hideColumns,
+  dateRange,
+  maxPage,
+  setCurrentPage,
 }) => {
   const allColumns = columnsConstructor(rawData, hideColumns);
+  console.log(rawData);
   const data = rawData.data;
 
   if (hasPublishedReports && !hideCellLinks) {
@@ -78,12 +85,12 @@ const DataTable: FunctionComponent<DataTableProps> = ({
   }
   const [columns] = useState(() => [...allColumns]);
 
-  const dataTypes = rawData.meta.dataTypes;
+  const dataTypes = rawData.meta?.dataTypes;
 
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  const defaultInvisibleColumns = {};
-  const [columnVisibility, setColumnVisibility] = useState(defaultSelectedColumns ? defaultInvisibleColumns : {});
+  // const defaultInvisibleColumns = {};
+  // const [columnVisibility, setColumnVisibility] = useState(defaultSelectedColumns ? defaultInvisibleColumns : {});
 
   const table = useReactTable({
     columns,
@@ -96,15 +103,16 @@ const DataTable: FunctionComponent<DataTableProps> = ({
       },
     },
     state: {
-      columnVisibility,
+      // columnVisibility,
       sorting,
     },
     onSortingChange: setSorting,
-    onColumnVisibilityChange: setColumnVisibility,
+    // onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    manualPagination: true,
   });
 
   const getSortedColumnsData = table => {
@@ -119,9 +127,9 @@ const DataTable: FunctionComponent<DataTableProps> = ({
     setTableColumnSortData(mapped);
   };
 
-  useEffect(() => {
-    getSortedColumnsData(table);
-  }, [sorting, columnVisibility, table.getFilteredRowModel()]);
+  // useEffect(() => {
+  //   getSortedColumnsData(table);
+  // }, [sorting, columnVisibility, table.getFilteredRowModel()]);
 
   useEffect(() => {
     if (resetFilters) {
@@ -135,17 +143,17 @@ const DataTable: FunctionComponent<DataTableProps> = ({
   const [additionalColumns, setAdditionalColumns] = useState([]);
 
   // We need to be able to access the accessorKey (which is a type violation) hence the ts ignore
-  if (defaultSelectedColumns) {
-    for (const column of allColumns) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      if (defaultSelectedColumns && !defaultSelectedColumns?.includes(column.accessorKey)) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        defaultInvisibleColumns[column.accessorKey] = false;
-      }
-    }
-  }
+  // if (defaultSelectedColumns) {
+  //   for (const column of allColumns) {
+  //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //     // @ts-ignore
+  //     if (defaultSelectedColumns && !defaultSelectedColumns?.includes(column.accessorKey)) {
+  //       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //       // @ts-ignore
+  //       defaultInvisibleColumns[column.accessorKey] = false;
+  //     }
+  //   }
+  // }
 
   const constructDefaultColumnsFromTableData = () => {
     const constructedDefaultColumns = [];
@@ -164,11 +172,11 @@ const DataTable: FunctionComponent<DataTableProps> = ({
     setAdditionalColumns(constructedAdditionalColumns);
   };
 
-  useEffect(() => {
-    if (defaultSelectedColumns) {
-      constructDefaultColumnsFromTableData();
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (defaultSelectedColumns) {
+  //     constructDefaultColumnsFromTableData();
+  //   }
+  // }, []);
 
   return (
     <>
@@ -179,27 +187,36 @@ const DataTable: FunctionComponent<DataTableProps> = ({
               <StickyTable height={521}>
                 <table>
                   <DataTableHeader table={table} dataTypes={dataTypes} resetFilters={resetFilters} setFiltersActive={setFiltersActive} />
-                  <DataTableBody table={table} dataTypes={dataTypes} />
+                  <DataTableBody table={table} dataTypes={dataTypes} dateRange={dateRange} />
                 </table>
               </StickyTable>
             </div>
           </div>
-          <div className={selectColumnPanel ? selectColumnPanelActive : selectColumnPanelInactive} data-testid="selectColumnsMainContainer">
-            {defaultSelectedColumns && (
-              <DataTableColumnSelector
-                fields={allColumns}
-                resetToDefault={() => setColumnVisibility(defaultInvisibleColumns)}
-                setSelectColumnPanel={setSelectColumnPanel}
-                defaultSelectedColumns={defaultSelectedColumns}
-                table={table}
-                additionalColumns={additionalColumns}
-                defaultColumns={defaultColumns}
-              />
-            )}
-          </div>
+          {/*<div className={selectColumnPanel ? selectColumnPanelActive : selectColumnPanelInactive} data-testid="selectColumnsMainContainer">*/}
+          {/*  {defaultSelectedColumns && (*/}
+          {/*    <DataTableColumnSelector*/}
+          {/*      fields={allColumns}*/}
+          {/*      resetToDefault={() => setColumnVisibility(defaultInvisibleColumns)}*/}
+          {/*      setSelectColumnPanel={setSelectColumnPanel}*/}
+          {/*      defaultSelectedColumns={defaultSelectedColumns}*/}
+          {/*      table={table}*/}
+          {/*      additionalColumns={additionalColumns}*/}
+          {/*      defaultColumns={defaultColumns}*/}
+          {/*    />*/}
+          {/*  )}*/}
+          {/*</div>*/}
         </div>
       </div>
-      {shouldPage && <DataTableFooter table={table} showPaginationControls={showPaginationControls} pagingProps={pagingProps} />}
+      {shouldPage && (
+        <DataTableFooter
+          table={table}
+          showPaginationControls={showPaginationControls}
+          pagingProps={pagingProps}
+          dateRange={dateRange}
+          maxPage={10}
+          setCurrentPage={setCurrentPage}
+        />
+      )}
     </>
   );
 };

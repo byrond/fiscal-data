@@ -7,11 +7,12 @@ import classNames from 'classnames';
 interface IDataTableBody {
   table: Table<any>;
   dataTypes: { [key: string]: string };
+  dateRange;
 }
 
-const DataTableBody: FunctionComponent<IDataTableBody> = ({ table, dataTypes }) => {
+const DataTableBody: FunctionComponent<IDataTableBody> = ({ table, dataTypes, dateRange }) => {
   let fillCell = false;
-
+  // console.log(table.getRowModel());
   return (
     <tbody>
       {table.getRowModel().rows.map(row => {
