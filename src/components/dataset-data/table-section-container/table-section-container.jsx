@@ -71,7 +71,7 @@ const TableSectionContainer = ({
       return res.meta;
     });
     setMaxPage(data);
-    console.log('pageSize ***', data);
+    return data;
   };
 
   const refreshTable = async () => {

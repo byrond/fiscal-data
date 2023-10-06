@@ -51,26 +51,6 @@ export default function DtgTable({
   } = tableProps;
 
   const [reactTableData, setReactTableData] = useState(null);
-
-  useEffect(() => {
-    // console.log('react table data', dePaginated, rawData);
-    if (tableProps) {
-      if (dePaginated !== undefined) {
-        if (dePaginated !== null) {
-          if (reactTableData === null) {
-            setReactTableData(dePaginated);
-          }
-        } else {
-          if (rawData !== null) {
-            if (reactTableData === null) {
-              setReactTableData(rawData);
-            }
-          }
-        }
-      }
-    }
-  }, [tableProps]);
-
   const data = tableProps.data !== undefined && tableProps.data !== null ? tableProps.data : [];
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(
@@ -331,6 +311,23 @@ export default function DtgTable({
     console.log('current page: ', currentPage);
   }, [currentPage]);
 
+  useEffect(() => {
+    if (tableProps) {
+      if (rawData !== null) {
+        if (reactTableData === null) {
+          setReactTableData(rawData);
+        }
+      }
+    }
+  }, [tableProps]);
+
+  useEffect(() => {
+    if (tableData.length > 0 && meta !== undefined && meta !== null) {
+      console.log({ data: tableData, meta: meta });
+      setReactTableData({ data: tableData, meta: meta });
+    }
+  }, [tableData, meta]);
+
   if (maxRows === 1) {
     rowText[0] = '';
     rowText[1] = 'row';
@@ -356,10 +353,10 @@ export default function DtgTable({
           </div>
         </>
       )}
-      {tableData.length >= 10 && meta ? (
+      {reactTableData ? (
         <>
           <DataTable
-            rawData={{ data: tableData, meta: meta }}
+            rawData={reactTableData}
             defaultSelectedColumns={selectColumns}
             setTableColumnSortData={setTableColumnSortData}
             hideCellLinks={true}
@@ -376,11 +373,11 @@ export default function DtgTable({
             setFiltersActive={setFiltersActive}
             hideColumns={hideColumns}
             dateRange={dateRange}
-            maxPage={dePaginatedMaxPage}
             setCurrentPage={setCurrentPage}
             rowText={rowText}
             rowsShowing={rowsShowing}
             maxRows={maxRows}
+            prepaginated={!!meta}
           />
         </>
       ) : (

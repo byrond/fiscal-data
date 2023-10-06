@@ -35,11 +35,11 @@ type DataTableProps = {
   setFiltersActive: (value: boolean) => void;
   hideColumns?: string[];
   dateRange;
-  maxPage: number;
   setCurrentPage;
   rowsShowing;
   rowText;
   maxRows;
+  prepaginated;
 };
 
 const DataTable: FunctionComponent<DataTableProps> = ({
@@ -60,11 +60,11 @@ const DataTable: FunctionComponent<DataTableProps> = ({
   setFiltersActive,
   hideColumns,
   dateRange,
-  maxPage,
   setCurrentPage,
   rowsShowing,
   rowText,
   maxRows,
+  prepaginated,
 }) => {
   const allColumns = columnsConstructor(rawData, hideColumns);
   console.log(rawData);
@@ -118,7 +118,7 @@ const DataTable: FunctionComponent<DataTableProps> = ({
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    manualPagination: true,
+    manualPagination: prepaginated,
   });
 
   const getSortedColumnsData = table => {
@@ -224,6 +224,7 @@ const DataTable: FunctionComponent<DataTableProps> = ({
           rowText={rowText}
           rowsShowing={rowsShowing}
           maxRows={maxRows}
+          prepaginated={prepaginated}
         />
       )}
     </>
