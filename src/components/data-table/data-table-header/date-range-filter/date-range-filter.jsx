@@ -19,7 +19,7 @@ import { faCalendarDay } from '@fortawesome/free-solid-svg-icons';
 import { convertDate } from '../../../dataset-data/dataset-data-helper/dataset-data-helper';
 
 let mouseOverDropdown = null;
-const DateRangeFilter = ({ column, resetFilters, allActiveFilters, setAllActiveFilters }) => {
+const DateRangeFilter = ({ column, resetFilters, allActiveFilters, setAllActiveFilters, setFilteredDateRange }) => {
   const [selected, setSelected] = useState({
     from: undefined,
     to: undefined,
@@ -107,9 +107,14 @@ const DateRangeFilter = ({ column, resetFilters, allActiveFilters, setAllActiveF
     if (selected?.from && selected?.to) {
       const start = moment(selected?.from);
       const end = moment(selected?.to);
+      setFilteredDateRange({ from: start, to: end });
       column.setFilterValue(getDaysArray(start.format('YYYY-MM-DD'), end.format('YYYY-MM-DD')));
       onFilterChange(`${start.format('M/D/YYYY')} - ${end.format('M/D/YYYY')}`);
     } else {
+      //TODO don't update if range selection is in progress
+      if (selected?.from || selected?.to) {
+        setFilteredDateRange({});
+      }
       column.setFilterValue([]);
       onFilterChange('');
     }

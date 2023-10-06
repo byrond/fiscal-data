@@ -15,6 +15,8 @@ import DynamicConfig from './dynamic-config/dynamicConfig';
 import Experimental from '../../experimental/experimental';
 import { determineUserFilterUnmatchedForDateRange } from '../../filter-download-container/user-filter/user-filter';
 import { apiPrefix, basicFetch, buildSortParams, formatDateForApi, MAX_PAGE_SIZE } from '../../../utils/api-utils';
+import { useSetRecoilState } from 'recoil';
+import { largeDatasetsLastCachedState } from '../../../recoil/largeDatasetsDataState';
 
 const TableSectionContainer = ({
   config,
@@ -54,23 +56,37 @@ const TableSectionContainer = ({
   const [resetFilters, setResetFilters] = useState(false);
   const [filtersActive, setFiltersActive] = useState(false);
 
-  const [maxPage, setMaxPage] = useState(undefined);
+  const [paginatedMeta, setPaginatedMeta] = useState(undefined);
+  const [data, setData] = useState(undefined);
+  const setLargeDatasetData = useSetRecoilState(largeDatasetsLastCachedState);
 
   // Investigate why this is being called twice?
   const getDepaginatedData = async () => {
     const from = formatDateForApi(dateRange.from);
     const to = formatDateForApi(dateRange.to);
     const sortParam = buildSortParams(selectedTable, selectedPivot);
+    let meta = false;
     const data = await basicFetch(
       `${apiPrefix}${selectedTable.endpoint}?filter=${selectedTable.dateField}:gte:${from},${selectedTable.dateField}` +
         `:lte:${to}&sort=${sortParam}`
     ).then(async res => {
       const totalCount = res.meta['total-count'];
-      const pageSize = totalCount >= MAX_PAGE_SIZE ? MAX_PAGE_SIZE : totalCount;
-      // console.log('pageSize', pageSize);
-      return res.meta;
+      if (totalCount < MAX_PAGE_SIZE) {
+        return await basicFetch(
+          `${apiPrefix}${selectedTable.endpoint}?filter=${selectedTable.dateField}:gte:${from},${selectedTable.dateField}` +
+            `:lte:${to}&sort=${sortParam}&page[size]=${totalCount}`
+        );
+      } else {
+        meta = true;
+        return res.meta;
+      }
     });
-    setMaxPage(data);
+    if (meta) {
+      setPaginatedMeta(data);
+    } else {
+      setLargeDatasetData(data);
+      setData(data);
+    }
     return data;
   };
 
@@ -107,7 +123,6 @@ const TableSectionContainer = ({
       hideColumns: config.hideColumns,
       excludeCols: ['CHART_DATE'],
       aria: { 'aria-labelledby': 'main-data-table-title' },
-      dePaginatedMaxPage: maxPage,
     });
   };
 
@@ -234,7 +249,8 @@ const TableSectionContainer = ({
                   resetFilters={resetFilters}
                   setResetFilters={setResetFilters}
                   setFiltersActive={setFiltersActive}
-                  meta={maxPage}
+                  meta={paginatedMeta}
+                  // dataLgDt={data}
                 />
               ) : (
                 ''

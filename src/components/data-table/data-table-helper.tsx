@@ -98,8 +98,9 @@ export const getColumnFilter: (
   resetFilters: boolean,
   setFiltersActive: (val: boolean) => void,
   allActiveFilters: string[],
-  setAllActiveFilters: (val: string[]) => void
-) => JSX.Element = (header, type, resetFilters, setFiltersActive, allActiveFilters, setAllActiveFilters) => {
+  setAllActiveFilters: (val: string[]) => void,
+  setFilteredDateRange
+) => JSX.Element = (header, type, resetFilters, setFiltersActive, allActiveFilters, setAllActiveFilters, setFilteredDateRange) => {
   if (type === 'DATE') {
     return (
       <DateRangeFilter
@@ -107,6 +108,7 @@ export const getColumnFilter: (
         resetFilters={resetFilters}
         allActiveFilters={allActiveFilters}
         setAllActiveFilters={setAllActiveFilters}
+        setFilteredDateRange={setFilteredDateRange}
       />
     );
   } else {

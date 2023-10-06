@@ -14,6 +14,7 @@ import * as styles from './dtg-table.module.scss';
 import CustomLink from '../links/custom-link/custom-link';
 import DtgTableColumnSelector from './dtg-table-column-selector';
 import DataTable from '../data-table/data-table';
+import moment from 'moment/moment';
 
 const defaultRowsPerPage = 10;
 const selectColumnRowsPerPage = 10;
@@ -29,6 +30,7 @@ export default function DtgTable({
   setResetFilters,
   setFiltersActive,
   meta,
+  dataLgDt,
 }) {
   const {
     dePaginated,
@@ -47,7 +49,6 @@ export default function DtgTable({
     hideColumns,
     hasPublishedReports,
     publishedReports,
-    dePaginatedMaxPage,
   } = tableProps;
 
   const [reactTableData, setReactTableData] = useState(null);
@@ -69,6 +70,7 @@ export default function DtgTable({
   const [activeColumns, setActiveColumns] = useState([]);
   const [isReset, setIsReset] = useState(false);
   const [selectColumnsTableWidth, setSelectColumnsTableWidth] = useState(width ? (isNaN(width) ? width : `${width}px`) : 'auto');
+  const [filteredDateRange, setFilteredDateRange] = useState({});
 
   let loadCanceled = false;
 
@@ -119,9 +121,14 @@ export default function DtgTable({
   const makePagedRequest = async resetPage => {
     if (selectedTable && selectedTable.endpoint && !loadCanceled) {
       loadTimer = setTimeout(() => loadingTimeout(loadCanceled, setIsLoading), netLoadingDelay);
-
-      const from = formatDateForApi(dateRange.from);
-      const to = formatDateForApi(dateRange.to);
+      const from =
+        filteredDateRange?.from && moment(dateRange.from).diff(filteredDateRange?.from) <= 0
+          ? filteredDateRange?.from.format('YYYY-MM-DD')
+          : formatDateForApi(dateRange.from);
+      const to =
+        filteredDateRange?.from && moment(dateRange.to).diff(filteredDateRange?.to) >= 0
+          ? filteredDateRange?.from.format('YYYY-MM-DD')
+          : formatDateForApi(dateRange.to);
       const startPage = resetPage ? 1 : currentPage;
 
       pagedDatatableRequest(selectedTable, from, to, selectedPivot, startPage, itemsPerPage)
@@ -271,7 +278,7 @@ export default function DtgTable({
     return () => {
       loadCanceled = true;
     };
-  }, [tableProps.data, tableProps.serverSidePagination, itemsPerPage, currentPage]);
+  }, [tableProps.data, tableProps.serverSidePagination, itemsPerPage, currentPage, filteredDateRange]);
 
   useEffect(() => {
     if (selectColumns && activeColumns) {
@@ -282,14 +289,12 @@ export default function DtgTable({
   }, [tableData]);
 
   useEffect(() => {
-    // console.log('data: ', data);
     if (data && data.length) {
       setMaxRows(apiError ? 0 : data.length);
     }
   }, [data]);
 
   useEffect(() => {
-    // console.log('tableProps.data: ', tableProps.data);
     if (!tableProps.data) {
       setCurrentPage(1);
     }
@@ -297,23 +302,14 @@ export default function DtgTable({
   }, [tableProps.data]);
 
   useEffect(() => {
-    console.log('meta:', meta);
-    if (tableData?.length === 10 && dePaginatedMaxPage) {
-      console.log('table data: ', tableData, 'meta:', dePaginatedMaxPage);
-      // console.log('react table data: ', reactTableData);
-    }
-  }, [tableData, meta]);
-
-  useEffect(() => {
     setShowPaginationControls(isPaginationControlNeeded());
   }, [maxRows]);
-  useEffect(() => {
-    console.log('current page: ', currentPage);
-  }, [currentPage]);
 
   useEffect(() => {
     if (tableProps) {
-      if (rawData !== null) {
+      if (dePaginated && !meta) {
+        setReactTableData(dePaginated);
+      } else if (rawData !== null) {
         if (reactTableData === null) {
           setReactTableData(rawData);
         }
@@ -323,7 +319,6 @@ export default function DtgTable({
 
   useEffect(() => {
     if (tableData.length > 0 && meta !== undefined && meta !== null) {
-      console.log({ data: tableData, meta: meta });
       setReactTableData({ data: tableData, meta: meta });
     }
   }, [tableData, meta]);
@@ -378,6 +373,7 @@ export default function DtgTable({
             rowsShowing={rowsShowing}
             maxRows={maxRows}
             prepaginated={!!meta}
+            setFilteredDateRange={setFilteredDateRange}
           />
         </>
       ) : (

@@ -40,6 +40,7 @@ type DataTableProps = {
   rowText;
   maxRows;
   prepaginated;
+  setFilteredDateRange;
 };
 
 const DataTable: FunctionComponent<DataTableProps> = ({
@@ -65,6 +66,7 @@ const DataTable: FunctionComponent<DataTableProps> = ({
   rowText,
   maxRows,
   prepaginated,
+  setFilteredDateRange,
 }) => {
   const allColumns = columnsConstructor(rawData, hideColumns);
   console.log(rawData);
@@ -192,7 +194,13 @@ const DataTable: FunctionComponent<DataTableProps> = ({
             <div data-test-id="table-content" className={tableContainer}>
               <StickyTable height={521}>
                 <table>
-                  <DataTableHeader table={table} dataTypes={dataTypes} resetFilters={resetFilters} setFiltersActive={setFiltersActive} />
+                  <DataTableHeader
+                    table={table}
+                    dataTypes={dataTypes}
+                    resetFilters={resetFilters}
+                    setFiltersActive={setFiltersActive}
+                    setFilteredDateRange={setFilteredDateRange}
+                  />
                   <DataTableBody table={table} dataTypes={dataTypes} dateRange={dateRange} />
                 </table>
               </StickyTable>
