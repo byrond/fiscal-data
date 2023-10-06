@@ -25,12 +25,12 @@ export default function DtgTable({
   setPerPage,
   selectColumnPanel,
   setSelectColumnPanel,
+  tableColumnSortData,
   setTableColumnSortData,
   resetFilters,
   setResetFilters,
   setFiltersActive,
-  meta,
-  dataLgDt,
+  filtersActive,
 }) {
   const {
     dePaginated,
@@ -71,6 +71,7 @@ export default function DtgTable({
   const [isReset, setIsReset] = useState(false);
   const [selectColumnsTableWidth, setSelectColumnsTableWidth] = useState(width ? (isNaN(width) ? width : `${width}px`) : 'auto');
   const [filteredDateRange, setFilteredDateRange] = useState({});
+  const [sorting, setSorting] = useState(undefined);
 
   let loadCanceled = false;
 
@@ -131,7 +132,7 @@ export default function DtgTable({
           : formatDateForApi(dateRange.to);
       const startPage = resetPage ? 1 : currentPage;
 
-      pagedDatatableRequest(selectedTable, from, to, selectedPivot, startPage, itemsPerPage)
+      pagedDatatableRequest(selectedTable, from, to, selectedPivot, startPage, itemsPerPage, tableColumnSortData)
         .then(res => {
           if (!loadCanceled) {
             setEmptyDataMessage(null);
@@ -259,11 +260,19 @@ export default function DtgTable({
     changeTableWidth(activeColArray);
   };
 
+  const test = paged => {
+    setApiError(false);
+    const ssp = tableProps.serverSidePagination;
+    ssp !== undefined && ssp !== null ? getPagedData(paged) : getCurrentData();
+    return () => {
+      loadCanceled = true;
+    };
+  };
+
   useEffect(() => {
     updateSmallFractionDataType();
     setCurrentPage(1);
     setApiError(false);
-
     const ssp = tableProps.serverSidePagination;
     ssp !== undefined && ssp !== null ? getPagedData(true) : getCurrentData();
     return () => {
@@ -278,7 +287,19 @@ export default function DtgTable({
     return () => {
       loadCanceled = true;
     };
-  }, [tableProps.data, tableProps.serverSidePagination, itemsPerPage, currentPage, filteredDateRange]);
+  }, [tableProps.data, tableProps.serverSidePagination, itemsPerPage, currentPage, filteredDateRange, sorting]);
+
+  // useEffect(() => {
+  //   if (tableColumnSortData && filtersActive) {
+  //     console.log('****************', tableColumnSortData);
+  //     setApiError(false);
+  //     const ssp = tableProps.serverSidePagination;
+  //     ssp !== undefined && ssp !== null ? getPagedData(false) : getCurrentData();
+  //     return () => {
+  //       loadCanceled = true;
+  //     };
+  //   }
+  // }, [tableColumnSortData]);
 
   useEffect(() => {
     if (selectColumns && activeColumns) {
@@ -307,8 +328,9 @@ export default function DtgTable({
 
   useEffect(() => {
     if (tableProps) {
-      if (dePaginated && !meta) {
-        setReactTableData(dePaginated);
+      if (dePaginated?.data) {
+        // console.log('dePaginated', dePaginated);
+        setReactTableData(dePaginated?.data);
       } else if (rawData !== null) {
         if (reactTableData === null) {
           setReactTableData(rawData);
@@ -318,10 +340,10 @@ export default function DtgTable({
   }, [tableProps]);
 
   useEffect(() => {
-    if (tableData.length > 0 && meta !== undefined && meta !== null) {
-      setReactTableData({ data: tableData, meta: meta });
+    if (tableData.length > 0 && dePaginated?.meta) {
+      setReactTableData({ data: tableData, meta: dePaginated.meta });
     }
-  }, [tableData, meta]);
+  }, [tableData, dePaginated]);
 
   if (maxRows === 1) {
     rowText[0] = '';
@@ -348,7 +370,7 @@ export default function DtgTable({
           </div>
         </>
       )}
-      {reactTableData ? (
+      {reactTableData && reactTableData !== [] ? (
         <>
           <DataTable
             rawData={reactTableData}
@@ -372,8 +394,9 @@ export default function DtgTable({
             rowText={rowText}
             rowsShowing={rowsShowing}
             maxRows={maxRows}
-            prepaginated={!!meta}
+            prepaginated={!!dePaginated?.meta}
             setFilteredDateRange={setFilteredDateRange}
+            refetch={setSorting}
           />
         </>
       ) : (

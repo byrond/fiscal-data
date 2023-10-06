@@ -1,6 +1,53 @@
-import {convertJSDateToAPI} from '../transform/dates';
-import {buildSortParams} from "./api-utils";
+import { convertJSDateToAPI } from '../transform/dates';
+import { buildSortParams } from './api-utils';
 import GLOBALS from '../helpers/constants';
+
+export const buildTableColumnSortParams = (sortData, apiSortParams) => {
+  let tableColumnFields = '&fields=';
+  let tableColumnSort = '';
+  let tableColumnFilter = '';
+  let defaultParamsWithColumnSelect = [];
+  sortData.forEach(column => {
+    if (!column.allColumnsSelected) {
+      if (tableColumnFields === '&fields=') {
+        tableColumnFields += `${column.id}`;
+      } else {
+        tableColumnFields += `,${column.id}`;
+      }
+    }
+    if (column.sorted !== false) {
+      if (column.sorted === 'asc') {
+        tableColumnSort += `+${column.id}`;
+      } else {
+        tableColumnSort += `-${column.id}`;
+      }
+    }
+    if (column.filterValue !== undefined) {
+      tableColumnFilter += `,${column.id}:in:(${[...new Set(column.rowValues)].join(',')})`;
+    }
+  });
+  console.log(tableColumnFields);
+  // If the user has engaged the column select, apply the default sort params to the applicable selected columns
+  if (tableColumnFields !== '&fields=') {
+    const fieldsAsArray = tableColumnFields.replace('&fields=', '').split(',');
+    const defaultSortParamsAsArray = apiSortParams.split(',');
+    console.log('defaultSortParamsAsArray', defaultSortParamsAsArray);
+    defaultSortParamsAsArray.filter(element => {
+      fieldsAsArray.forEach(field => {
+        if (element.includes(field)) {
+          defaultParamsWithColumnSelect.push(element);
+        }
+      });
+    });
+    defaultParamsWithColumnSelect = defaultParamsWithColumnSelect.join(',');
+  }
+  return {
+    fields: tableColumnFields,
+    sort: tableColumnSort,
+    filter: tableColumnFilter,
+    defaultParamsWithColumnSelect: defaultParamsWithColumnSelect,
+  };
+};
 
 /**
  * This function creates a fragment of the formatted object used within the API download request.
@@ -12,8 +59,9 @@ import GLOBALS from '../helpers/constants';
  * @returns {null|Object}    - Returns null if params are invalid, else returns object with desired
  * fields "apiId" and "params"
  */
+
 const buildDownloadObject = (api, dateRange, fileType, userFilter, tableColumnSortData) => {
-  if(!api || !dateRange || !fileType){
+  if (!api || !dateRange || !fileType) {
     console.warn('Invalid params passed to buildDownloadObject');
     return null;
   }
@@ -24,7 +72,7 @@ const buildDownloadObject = (api, dateRange, fileType, userFilter, tableColumnSo
   const apiSortParams = buildSortParams(api);
 
   // Convert the date range format from YYYY-MM-DD to YYYY-MM for the following apis.
-  if(GLOBALS.ENDPOINTS_WITH_YEAR_MONTH_DATE_FORMAT.some(id => id === apiIdStr)){
+  if (GLOBALS.ENDPOINTS_WITH_YEAR_MONTH_DATE_FORMAT.some(id => id === apiIdStr)) {
     dateRange.to = dateRange.to.slice(0, -3);
     dateRange.from = dateRange.from.slice(0, -3);
   }
@@ -36,51 +84,25 @@ const buildDownloadObject = (api, dateRange, fileType, userFilter, tableColumnSo
   if (userFilter?.value) {
     filterAddendum = `,${api.userFilter.field}:eq:${userFilter.value}`;
   }
+  let tableColumnSortParams;
   if (tableColumnSortData) {
-    tableColumnSortData.forEach(column => {
-      if (!column.allColumnsSelected) {
-        if (tableColumnFields === '&fields=') {
-          tableColumnFields += `${column.id}`;
-        }
-        else {
-          tableColumnFields += `,${column.id}`;
-        }
-      }
-      if (column.sorted !== false) {
-        if (column.sorted === 'asc') {
-          tableColumnSort += `+${column.id}`;
-        }
-        else {
-          tableColumnSort += `-${column.id}`;
-        }
-      }
-      if (column.filterValue !== undefined) {
-        tableColumnFilter += `,${column.id}:in:(${[...new Set(column.rowValues)].join(',')})`
-      }
-    });
-    // If the user has engaged the column select, apply the default sort params to the applicable selected columns
-    if (tableColumnFields !== '&fields=') {
-      const fieldsAsArray = tableColumnFields.replace('&fields=', '').split(',');
-      const defaultSortParamsAsArray = apiSortParams.split(',');
-      defaultSortParamsAsArray.filter((element) => {
-        fieldsAsArray.forEach((field) => {
-          if (element.includes(field)) {
-            defaultParamsWithColumnSelect.push(element);
-          }
-        });
-      });
-      defaultParamsWithColumnSelect = defaultParamsWithColumnSelect.join(',');
-    }
+    tableColumnSortParams = buildTableColumnSortParams(tableColumnSortData, apiSortParams);
+    tableColumnFields = tableColumnSortParams.fields;
+    tableColumnSort = tableColumnSortParams.sort;
+    tableColumnFilter = tableColumnSortParams.filter;
+    defaultParamsWithColumnSelect = tableColumnSortParams.defaultParamsWithColumnSelect;
+    console.log(tableColumnSortParams);
   }
-
 
   return {
     apiId: apiId,
-    params: `?filter=${apiDateField}:gte:${dateRange.from},` +
+    params:
+      `?filter=${apiDateField}:gte:${dateRange.from},` +
       `${apiDateField}:lte:${dateRange.to}${filterAddendum}${tableColumnFilter}` +
-      `&sort=${tableColumnSort ? tableColumnSort : tableColumnFields !== '&fields=' ?
-        defaultParamsWithColumnSelect : apiSortParams }&format=${fileType}${tableColumnFields !== '&fields=' ? tableColumnFields : ''}`
-  }
+      `&sort=${
+        tableColumnSort ? tableColumnSort : tableColumnFields !== '&fields=' ? defaultParamsWithColumnSelect : apiSortParams
+      }&format=${fileType}${tableColumnFields !== '&fields=' ? tableColumnFields : ''}`,
+  };
 };
 
 const dataTables = [
@@ -89,20 +111,15 @@ const dataTables = [
     endpoint: '',
     description: 'Dataset without an alwaysSortWith field defined',
     dateField: 'record_date',
-    fields: [
-      {columnName: 'record_date'},
-      {columnName: 'Col1'},
-      {columnName: 'src_line_nbr'},
-      {columnName: 'Col2'}
-    ]
+    fields: [{ columnName: 'record_date' }, { columnName: 'Col1' }, { columnName: 'src_line_nbr' }, { columnName: 'Col2' }],
   },
   {
     id: 'AlwysSrtWth',
     endpoint: '',
     description: 'Dataset with an alwaysSortWith field defined',
-    fields: [{columnName: 'record_date'}, {columnName: 'Col3'}, {columnName: 'Col4'}],
-    alwaysSortWith: ['-record_date', 'col4']
-  }
+    fields: [{ columnName: 'record_date' }, { columnName: 'Col3' }, { columnName: 'Col4' }],
+    alwaysSortWith: ['-record_date', 'col4'],
+  },
 ];
 
 /**
@@ -117,30 +134,30 @@ const dataTables = [
  * collection of APIs as built from buildDownloadObject above.
  */
 export const buildDownloadRequestArray = (apis, dateRange, fileType, userFilter, tableColumnSortData) => {
-  if(!apis || !dateRange || !fileType){
+  if (!apis || !dateRange || !fileType) {
     console.warn('Invalid params passed to buildDownloadRequestArray');
     return null;
   }
   const requestArr = [];
   const apiDateRange = {
     from: convertJSDateToAPI(dateRange.from),
-    to: convertJSDateToAPI(dateRange.to)
+    to: convertJSDateToAPI(dateRange.to),
   };
   let requestAPIs = apis;
   let curDownloadObject = null;
 
-  if(!(apis instanceof Array)){
+  if (!(apis instanceof Array)) {
     requestAPIs = [apis];
   }
 
-  for(let i = requestAPIs.length; i--;){
+  for (let i = requestAPIs.length; i--; ) {
     curDownloadObject = buildDownloadObject(requestAPIs[i], apiDateRange, fileType, userFilter, tableColumnSortData);
     if (curDownloadObject) {
       requestArr.push(curDownloadObject);
     }
   }
 
-  if(!requestArr.length){
+  if (!requestArr.length) {
     // The following should only appear if we erroneously call this function with bad params.
     // In practice, this shouldn't show up in the console.
     console.warn('No valid APIs can be built with this request, please check input params');
@@ -148,11 +165,11 @@ export const buildDownloadRequestArray = (apis, dateRange, fileType, userFilter,
   }
 
   return {
-    apis: requestArr
+    apis: requestArr,
   };
 };
 
 export const unitTestObjects = {
   dataTables: dataTables,
-  buildDownloadObject: buildDownloadObject
+  buildDownloadObject: buildDownloadObject,
 };

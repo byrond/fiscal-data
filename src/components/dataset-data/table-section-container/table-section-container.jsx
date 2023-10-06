@@ -37,6 +37,7 @@ const TableSectionContainer = ({
   ignorePivots,
   allTablesSelected,
   handleConfigUpdate,
+  tableColumnSortData,
   setTableColumnSortData,
   hasPublishedReports,
   publishedReports,
@@ -65,29 +66,27 @@ const TableSectionContainer = ({
     const from = formatDateForApi(dateRange.from);
     const to = formatDateForApi(dateRange.to);
     const sortParam = buildSortParams(selectedTable, selectedPivot);
-    let meta = false;
+    const meta = false;
+    const results = {};
     const data = await basicFetch(
       `${apiPrefix}${selectedTable.endpoint}?filter=${selectedTable.dateField}:gte:${from},${selectedTable.dateField}` +
         `:lte:${to}&sort=${sortParam}`
     ).then(async res => {
       const totalCount = res.meta['total-count'];
       if (totalCount < MAX_PAGE_SIZE) {
-        return await basicFetch(
+        results.data = await basicFetch(
           `${apiPrefix}${selectedTable.endpoint}?filter=${selectedTable.dateField}:gte:${from},${selectedTable.dateField}` +
             `:lte:${to}&sort=${sortParam}&page[size]=${totalCount}`
         );
-      } else {
-        meta = true;
-        return res.meta;
       }
+      results.meta = res.meta;
     });
-    if (meta) {
-      setPaginatedMeta(data);
-    } else {
-      setLargeDatasetData(data);
-      setData(data);
-    }
-    return data;
+    // if (meta) {
+    setPaginatedMeta(results.meta);
+    // } else {
+    //   setLargeDatasetData(data);
+    // }
+    return results;
   };
 
   const refreshTable = async () => {
@@ -245,12 +244,12 @@ const TableSectionContainer = ({
                   tableProps={tableProps}
                   perPage={perPage}
                   setPerPage={setPerPage}
+                  tableColumnSortData={tableColumnSortData}
                   setTableColumnSortData={setTableColumnSortData}
                   resetFilters={resetFilters}
                   setResetFilters={setResetFilters}
                   setFiltersActive={setFiltersActive}
-                  meta={paginatedMeta}
-                  // dataLgDt={data}
+                  filtersActive={filtersActive}
                 />
               ) : (
                 ''

@@ -41,6 +41,7 @@ type DataTableProps = {
   maxRows;
   prepaginated;
   setFilteredDateRange;
+  refetch;
 };
 
 const DataTable: FunctionComponent<DataTableProps> = ({
@@ -67,9 +68,10 @@ const DataTable: FunctionComponent<DataTableProps> = ({
   maxRows,
   prepaginated,
   setFilteredDateRange,
+  refetch,
 }) => {
   const allColumns = columnsConstructor(rawData, hideColumns);
-  console.log(rawData);
+  // console.log(rawData);
   const data = rawData.data;
 
   if (hasPublishedReports && !hideCellLinks) {
@@ -132,12 +134,18 @@ const DataTable: FunctionComponent<DataTableProps> = ({
       rowValues: table.getFilteredRowModel().flatRows.map(row => row.original[column.id]),
       allColumnsSelected: hideColumns ? false : table.getIsAllColumnsVisible(),
     }));
+    // console.log(mapped);
     setTableColumnSortData(mapped);
   };
 
   useEffect(() => {
     getSortedColumnsData(table);
   }, [sorting, columnVisibility, table.getFilteredRowModel()]);
+
+  useEffect(() => {
+    refetch(sorting);
+    console.log(sorting);
+  }, [sorting]);
 
   useEffect(() => {
     if (resetFilters) {
