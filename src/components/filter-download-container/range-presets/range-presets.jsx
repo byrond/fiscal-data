@@ -46,7 +46,6 @@ const RangePresets = ({
    * DATE RANGE
    */
   const applyPreset = preset => {
-    console.log('test************************');
     let isFiltered = true;
 
     let label = preset.label;

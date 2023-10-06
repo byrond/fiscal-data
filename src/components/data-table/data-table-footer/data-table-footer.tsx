@@ -11,50 +11,62 @@ interface IDataTableFooter {
   dateRange;
   maxPage;
   setCurrentPage;
+  rowsShowing;
+  rowText;
+  maxRows;
 }
 
-const DataTableFooter: FunctionComponent<IDataTableFooter> = ({ table, showPaginationControls, pagingProps, dateRange, maxPage, setCurrentPage }) => {
+const DataTableFooter: FunctionComponent<IDataTableFooter> = ({
+  table,
+  showPaginationControls,
+  pagingProps,
+  dateRange,
+  maxPage,
+  setCurrentPage,
+  rowText,
+  rowsShowing,
+  maxRows,
+}) => {
   const [filteredRowLength, setFilteredRowLength] = React.useState(null);
   useEffect(() => {
-    setFilteredRowLength(table.getSortedRowModel().rows.length);
-  }, [table.getSortedRowModel()]);
-  // console.log(pagingProps);
-  // useEffect(() => {
-  //   console.log('max page *****', maxPage);
-  //   setFilteredRowLength(maxPage);
-  // }, [maxPage]);
+    setFilteredRowLength(maxPage);
+  }, [maxPage]);
 
-  const visibleRows = table => {
-    const rowsVisible = table?.getRowModel().flatRows.length;
-    const pageSize = pagingProps.itemsPerPage; //table.getState().pagination.pageSize;
-    const pageIndex = table.getState().pagination.pageIndex;
-    const minRow = pageIndex * pageSize + 1;
-    const maxRow = pageIndex * pageSize + rowsVisible;
-    return (
-      <>
-        Showing{' '}
-        <span className={range}>
-          {minRow} - {maxRow}
-        </span>{' '}
-        rows of {filteredRowLength} rows
-      </>
-    );
-  };
+  // const visibleRows = table => {
+  //   const rowsVisible = table?.getRowModel().flatRows.length;
+  //   const pageSize = pagingProps.itemsPerPage; //table.getState().pagination.pageSize;
+  //   const pageIndex = table.getState().pagination.pageIndex;
+  //   const minRow = pageIndex * pageSize + 1;
+  //   const maxRow = pageIndex * pageSize + rowsVisible;
+  //   return (
+  //     <>
+  //       Showing{' '}
+  //       <span className={range}>
+  //         {rowsShowing ? (
+  //           `${rowsShowing.begin} - ${rowsShowing.end}`
+  //         ) : (
+  //         `${minRow} - ${maxRow}`
+  //         )}
+  //       </span>{' '}
+  //       rows of {filteredRowLength} rows
+  //     </>
+  //   );
+  // };
 
-  const handlePerPageChange = pageSize => {
-    table.setPageSize(pageSize);
-    pagingProps?.handlePerPageChange(pageSize);
-  };
-
-  const handleJump = x => {
-    console.log('handleJump: ', x);
-    setCurrentPage(x - 1);
-  };
+  // const handlePerPageChange = pageSize => {
+  //   table.setPageSize(pageSize);
+  //   pagingProps?.handlePerPageChange(pageSize);
+  // };
+  //
+  // const handleJump = x => {
+  //   console.log('handleJump: ', x);
+  //   setCurrentPage(x - 1);
+  // };
 
   return (
     <div data-test-id="table-footer" className={tableFooter}>
       <div data-test-id="rows-showing" className={rowsShowing}>
-        {visibleRows(table)}
+        {`Showing ${rowsShowing.begin} - ${rowsShowing.end} ${rowText[0]} of ${maxRows} ${rowText[1]}`}
       </div>
       {showPaginationControls && <PaginationControls pagingProps={pagingProps} />}
     </div>

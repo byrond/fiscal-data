@@ -358,8 +358,6 @@ export default function DtgTable({
       )}
       {tableData.length >= 10 && meta ? (
         <>
-          <button onClick={() => setCurrentPage(2)}>test :)</button>
-
           <DataTable
             rawData={{ data: tableData, meta: meta }}
             defaultSelectedColumns={selectColumns}
@@ -380,6 +378,9 @@ export default function DtgTable({
             dateRange={dateRange}
             maxPage={dePaginatedMaxPage}
             setCurrentPage={setCurrentPage}
+            rowText={rowText}
+            rowsShowing={rowsShowing}
+            maxRows={maxRows}
           />
         </>
       ) : (

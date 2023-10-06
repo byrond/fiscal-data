@@ -37,6 +37,9 @@ type DataTableProps = {
   dateRange;
   maxPage: number;
   setCurrentPage;
+  rowsShowing;
+  rowText;
+  maxRows;
 };
 
 const DataTable: FunctionComponent<DataTableProps> = ({
@@ -59,6 +62,9 @@ const DataTable: FunctionComponent<DataTableProps> = ({
   dateRange,
   maxPage,
   setCurrentPage,
+  rowsShowing,
+  rowText,
+  maxRows,
 }) => {
   const allColumns = columnsConstructor(rawData, hideColumns);
   console.log(rawData);
@@ -89,8 +95,8 @@ const DataTable: FunctionComponent<DataTableProps> = ({
 
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  // const defaultInvisibleColumns = {};
-  // const [columnVisibility, setColumnVisibility] = useState(defaultSelectedColumns ? defaultInvisibleColumns : {});
+  const defaultInvisibleColumns = {};
+  const [columnVisibility, setColumnVisibility] = useState(defaultSelectedColumns ? defaultInvisibleColumns : {});
 
   const table = useReactTable({
     columns,
@@ -103,11 +109,11 @@ const DataTable: FunctionComponent<DataTableProps> = ({
       },
     },
     state: {
-      // columnVisibility,
+      columnVisibility,
       sorting,
     },
     onSortingChange: setSorting,
-    // onColumnVisibilityChange: setColumnVisibility,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -127,9 +133,9 @@ const DataTable: FunctionComponent<DataTableProps> = ({
     setTableColumnSortData(mapped);
   };
 
-  // useEffect(() => {
-  //   getSortedColumnsData(table);
-  // }, [sorting, columnVisibility, table.getFilteredRowModel()]);
+  useEffect(() => {
+    getSortedColumnsData(table);
+  }, [sorting, columnVisibility, table.getFilteredRowModel()]);
 
   useEffect(() => {
     if (resetFilters) {
@@ -143,17 +149,17 @@ const DataTable: FunctionComponent<DataTableProps> = ({
   const [additionalColumns, setAdditionalColumns] = useState([]);
 
   // We need to be able to access the accessorKey (which is a type violation) hence the ts ignore
-  // if (defaultSelectedColumns) {
-  //   for (const column of allColumns) {
-  //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //     // @ts-ignore
-  //     if (defaultSelectedColumns && !defaultSelectedColumns?.includes(column.accessorKey)) {
-  //       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //       // @ts-ignore
-  //       defaultInvisibleColumns[column.accessorKey] = false;
-  //     }
-  //   }
-  // }
+  if (defaultSelectedColumns) {
+    for (const column of allColumns) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      if (defaultSelectedColumns && !defaultSelectedColumns?.includes(column.accessorKey)) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        defaultInvisibleColumns[column.accessorKey] = false;
+      }
+    }
+  }
 
   const constructDefaultColumnsFromTableData = () => {
     const constructedDefaultColumns = [];
@@ -172,11 +178,11 @@ const DataTable: FunctionComponent<DataTableProps> = ({
     setAdditionalColumns(constructedAdditionalColumns);
   };
 
-  // useEffect(() => {
-  //   if (defaultSelectedColumns) {
-  //     constructDefaultColumnsFromTableData();
-  //   }
-  // }, []);
+  useEffect(() => {
+    if (defaultSelectedColumns) {
+      constructDefaultColumnsFromTableData();
+    }
+  }, []);
 
   return (
     <>
@@ -192,19 +198,19 @@ const DataTable: FunctionComponent<DataTableProps> = ({
               </StickyTable>
             </div>
           </div>
-          {/*<div className={selectColumnPanel ? selectColumnPanelActive : selectColumnPanelInactive} data-testid="selectColumnsMainContainer">*/}
-          {/*  {defaultSelectedColumns && (*/}
-          {/*    <DataTableColumnSelector*/}
-          {/*      fields={allColumns}*/}
-          {/*      resetToDefault={() => setColumnVisibility(defaultInvisibleColumns)}*/}
-          {/*      setSelectColumnPanel={setSelectColumnPanel}*/}
-          {/*      defaultSelectedColumns={defaultSelectedColumns}*/}
-          {/*      table={table}*/}
-          {/*      additionalColumns={additionalColumns}*/}
-          {/*      defaultColumns={defaultColumns}*/}
-          {/*    />*/}
-          {/*  )}*/}
-          {/*</div>*/}
+          <div className={selectColumnPanel ? selectColumnPanelActive : selectColumnPanelInactive} data-testid="selectColumnsMainContainer">
+            {defaultSelectedColumns && (
+              <DataTableColumnSelector
+                fields={allColumns}
+                resetToDefault={() => setColumnVisibility(defaultInvisibleColumns)}
+                setSelectColumnPanel={setSelectColumnPanel}
+                defaultSelectedColumns={defaultSelectedColumns}
+                table={table}
+                additionalColumns={additionalColumns}
+                defaultColumns={defaultColumns}
+              />
+            )}
+          </div>
         </div>
       </div>
       {shouldPage && (
@@ -215,6 +221,9 @@ const DataTable: FunctionComponent<DataTableProps> = ({
           dateRange={dateRange}
           maxPage={10}
           setCurrentPage={setCurrentPage}
+          rowText={rowText}
+          rowsShowing={rowsShowing}
+          maxRows={maxRows}
         />
       )}
     </>
