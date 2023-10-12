@@ -65,10 +65,26 @@ const TableSectionContainer = ({
     ).then(async res => {
       const totalCount = res.meta['total-count'];
       const pageSize = totalCount >= MAX_PAGE_SIZE ? MAX_PAGE_SIZE : totalCount;
-      return await basicFetch(
-        `${apiPrefix}${selectedTable.endpoint}?filter=${selectedTable.dateField}:gte:${from},${selectedTable.dateField}` +
-          `:lte:${to}&sort=${sortParam}&page[size]=${pageSize}`
-      );
+      if (totalCount > 10000) {
+        const data1 = await basicFetch(
+          `${apiPrefix}${selectedTable.endpoint}?filter=${selectedTable.dateField}:gte:${from},${selectedTable.dateField}` +
+            `:lte:${to}&sort=${sortParam}&page[number]=${1}&page[size]=${10000}`
+        ).then(async res2 => {
+          const data2 = await basicFetch(
+            `${apiPrefix}${selectedTable.endpoint}?filter=${selectedTable.dateField}:gte:${from},${selectedTable.dateField}` +
+              `:lte:${to}&sort=${sortParam}&page[number]=${2}&page[size]=${9999}`
+          );
+          res2.data = res2.data.concat(data2.data);
+          return res2;
+        });
+        console.log(data1);
+        return data1;
+      } else {
+        return await basicFetch(
+          `${apiPrefix}${selectedTable.endpoint}?filter=${selectedTable.dateField}:gte:${from},${selectedTable.dateField}` +
+            `:lte:${to}&sort=${sortParam}&page[size]=${pageSize}`
+        );
+      }
     });
   };
 
