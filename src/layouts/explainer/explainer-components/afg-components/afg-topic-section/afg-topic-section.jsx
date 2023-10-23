@@ -8,6 +8,7 @@ import Analytics from '../../../../../utils/analytics/analytics';
 import useGAEventTracking from '../../../../../hooks/useGAEventTracking';
 import AFGDefictChart from '../../../sections/overview/deficit-chart/deficit-chart';
 import AFGSpendingChart from '../../../sections/overview/spending-chart/spending-chart';
+import AFGRevenueChart from '../../../sections/overview/revenue-chart/revenue-chart';
 
 const AfgTopicSection = ({ heading, body, linkUrl, linkText, linkColor, image, imageAltText, eventNumber, citationClickPage, id }) => {
   const { gaEvent } = useGAEventTracking(eventNumber, citationClickPage);
@@ -29,7 +30,7 @@ const AfgTopicSection = ({ heading, body, linkUrl, linkText, linkColor, image, i
       case 'Federal Spending':
         return <AFGSpendingChart />;
       default:
-        return <ChartPlaceholder />;
+        return <AFGRevenueChart />;
     }
   };
 
