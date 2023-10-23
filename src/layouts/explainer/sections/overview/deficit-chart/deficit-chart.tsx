@@ -10,6 +10,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import CustomDotNoAnimation from './custom-dot/custom-dot';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
+import ChartLegend from '../chart-components/chart-legend';
 
 const AFGDeficitChart = (): ReactElement => {
   const [focusedYear, setFocusedYear] = useState(null);
@@ -115,16 +116,7 @@ const AFGDeficitChart = (): ReactElement => {
       )}
       {!isLoading && (
         <>
-          <div className={legend}>
-            {legendItems?.map((row, index) => {
-              return (
-                <div className={legendItem} key={index}>
-                  <span className={dot} style={{ backgroundColor: row.color }}></span>
-                  {row.title}
-                </div>
-              );
-            })}
-          </div>
+          <ChartLegend legendItems={legendItems} />
           <div>
             <div
               className={chartContainer}
